@@ -231,7 +231,7 @@ function cloudSave(){if(!fbUser||syncing)return;fbDb.ref('users/'+fbUser.uid+'/d
 let fbListener=null;
 function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false}})}
 function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
-function fbLogin(){fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('⚠️ Lỗi đăng nhập: '+e.message))}
+function fbLogin(){const isMob=window.innerWidth<=768;if(isMob){fbAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}else{fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('⚠️ Lỗi đăng nhập: '+e.message))}}
 function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
   const el=document.getElementById('fbAuth');if(!el)return;
