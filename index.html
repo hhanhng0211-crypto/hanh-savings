@@ -73,7 +73,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.85rem;z-index:200;opacity:0;transform:translateY(10px);transition:.3s}.toast.show{opacity:1;transform:translateY(0)}
 .note{text-align:center;color:var(--dim);font-size:.72rem;padding:16px;border-top:1px solid var(--bdr);margin-top:32px;line-height:1.6}
-@media(max-width:768px){.side{display:none}.main{margin-left:0;padding:14px}.g2,.g3,.g4{grid-template-columns:1fr}}
+@media(max-width:768px){.side{display:none}.main{margin-left:0;padding:14px;padding-bottom:70px}.g4{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.mob-nav{display:flex !important}}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bdr);z-index:99;justify-content:space-around;padding:6px 0}
+.mob-nav div{text-align:center;padding:6px 4px;font-size:.6rem;color:var(--dim);cursor:pointer;flex:1;transition:.2s}
+.mob-nav div.on{color:var(--ac)}.mob-nav div span{display:block;font-size:1.1rem;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -223,16 +226,19 @@ function def(){return{
 
 function load(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.incomes&&d.expenses){if(!d.goldHoldings)d.goldHoldings=[];if(!d.bankDeposits)d.bankDeposits=[];if(!d.goldPrices)d.goldPrices={g610:10486000,g9999:17050000};if(d.goldPrices.g610<=9600000)d.goldPrices.g610=10486000;if(d.goldPrices.g9999<=10800000)d.goldPrices.g9999=17050000;if(!d.monthTargets)d.monthTargets={};if(!d.monthTargets['2026-2'])d.monthTargets['2026-2']={bank:72000000,gold:28000000};if(typeof d.monthTargets['2026-2']==='number'){const v=d.monthTargets['2026-2'];d.monthTargets['2026-2']={bank:Math.round(v*0.72),gold:Math.round(v*0.28)}}if(!d.dashTarget)d.dashTarget=1e9;return d}}const old=localStorage.getItem('hanh_savings')||localStorage.getItem('hanh_finance_v2')||localStorage.getItem('hanh_finance_v3');const b=def();if(old){try{const o=JSON.parse(old);if(o.tracking)b.tracking=o.tracking;else if(typeof o==='object')b.tracking=o;}catch{}}return b}catch{return def()}}
 function save(){localStorage.setItem(SK,JSON.stringify(D));cloudSave()}
-function cloudSave(){if(!fbUser)return;fbDb.ref('users/'+fbUser.uid+'/data').set(D).catch(e=>console.warn('Cloud save error:',e))}
-function cloudLoad(){if(!fbUser)return;fbDb.ref('users/'+fbUser.uid+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){D=v;localStorage.setItem(SK,JSON.stringify(D));render();toast('☁️ Đã đồng bộ từ cloud!')}}).catch(e=>console.warn('Cloud load error:',e))}
+let syncing=false;
+function cloudSave(){if(!fbUser||syncing)return;fbDb.ref('users/'+fbUser.uid+'/data').set(D).catch(e=>console.warn('Cloud save error:',e))}
+let fbListener=null;
+function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false}})}
+function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
 function fbLogin(){fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('⚠️ Lỗi đăng nhập: '+e.message))}
-function fbLogout(){fbAuth.signOut()}
+function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
   const el=document.getElementById('fbAuth');if(!el)return;
   if(fbUser){el.innerHTML=`<div style="margin-bottom:8px">☁️ <span style="color:var(--green)">Synced</span></div><div style="font-size:.65rem;color:var(--dim);margin-bottom:6px">${fbUser.email}</div><button class="btn bo" style="font-size:.65rem;padding:3px 10px;width:100%" onclick="fbLogout()">🚪 Đăng xuất</button>`}
   else{el.innerHTML=`<div style="margin-bottom:6px;color:var(--dim)">☁️ Chưa đồng bộ</div><button class="btn bp" style="font-size:.7rem;padding:5px 12px;width:100%" onclick="fbLogin()"><img src="https://www.google.com/favicon.ico" style="width:14px;vertical-align:middle;margin-right:4px"> Đăng nhập Google</button>`}
 }
-fbAuth.onAuthStateChanged(u=>{fbUser=u;rFbAuth();if(u){cloudLoad()}});
+fbAuth.onAuthStateChanged(u=>{fbUser=u;rFbAuth();if(u){cloudListen()}else{cloudStop()}});
 function saveTrack(){document.querySelectorAll('#savTb input').forEach(el=>{const k=el.dataset.key,t=el.dataset.type;if(!k||!t)return;if(t==='goldChi'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}else if(t==='depositDate'){if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=el.value}else if(t==='term'||t==='rate'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=v}else{const v=parseInt(el.value.replace(/[,.]/g,''))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}});save();toast('✅ Đã lưu!');render()}
 
 function f(n){if(n>=1e9)return(n/1e9).toFixed(2)+' tỷ';if(n>=1e6)return(n/1e6).toFixed(1)+'tr';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toLocaleString('vi-VN')}
@@ -710,6 +716,18 @@ function importData(e){const file=e.target.files[0];if(!file)return;const r=new 
 render();
 // Auto-fetch gold prices on load
 fetchGoldPrices();
+
+// Mobile nav sync
+function rMobNav(){document.querySelectorAll('.mob-nav div').forEach(d=>{d.classList.toggle('on',d.dataset.p===cPage)})}
+document.addEventListener('click',e=>{const mn=e.target.closest('.mob-nav div[data-p]');if(mn){cPage=mn.dataset.p;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('on',x.dataset.p===cPage));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+cPage).classList.add('on');rMobNav();render()}});
 </script>
+<div class="mob-nav">
+<div class="on" data-p="dashboard"><span>📊</span>Tổng quan</div>
+<div data-p="income"><span>💵</span>Thu chi</div>
+<div data-p="assets"><span>💎</span>Tài sản</div>
+<div data-p="savings"><span>🏦</span>TK&Vàng</div>
+<div data-p="overview"><span>📈</span>Overview</div>
+<div data-p="forecast"><span>🚀</span>Forecast</div>
+</div>
 </body>
 </html>
