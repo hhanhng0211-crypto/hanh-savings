@@ -237,6 +237,7 @@ function rFbAuth(){
   const el=document.getElementById('fbAuth');if(!el)return;
   if(fbUser){el.innerHTML=`<div style="margin-bottom:8px">☁️ <span style="color:var(--green)">Synced</span></div><div style="font-size:.65rem;color:var(--dim);margin-bottom:6px">${fbUser.email}</div><button class="btn bo" style="font-size:.65rem;padding:3px 10px;width:100%" onclick="fbLogout()">🚪 Đăng xuất</button>`}
   else{el.innerHTML=`<div style="margin-bottom:6px;color:var(--dim)">☁️ Chưa đồng bộ</div><button class="btn bp" style="font-size:.7rem;padding:5px 12px;width:100%" onclick="fbLogin()"><img src="https://www.google.com/favicon.ico" style="width:14px;vertical-align:middle;margin-right:4px"> Đăng nhập Google</button>`}
+  const ms=document.getElementById('mobSync');if(ms){ms.innerHTML=fbUser?'<span>🟢</span>Synced':'<span>☁️</span>Sync'}
 }
 fbAuth.onAuthStateChanged(u=>{fbUser=u;rFbAuth();if(u){cloudListen()}else{cloudStop()}});
 function saveTrack(){document.querySelectorAll('#savTb input').forEach(el=>{const k=el.dataset.key,t=el.dataset.type;if(!k||!t)return;if(t==='goldChi'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}else if(t==='depositDate'){if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=el.value}else if(t==='term'||t==='rate'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=v}else{const v=parseInt(el.value.replace(/[,.]/g,''))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}});save();toast('✅ Đã lưu!');render()}
@@ -726,8 +727,8 @@ document.addEventListener('click',e=>{const mn=e.target.closest('.mob-nav div[da
 <div data-p="income"><span>💵</span>Thu chi</div>
 <div data-p="assets"><span>💎</span>Tài sản</div>
 <div data-p="savings"><span>🏦</span>TK&Vàng</div>
-<div data-p="overview"><span>📈</span>Overview</div>
 <div data-p="forecast"><span>🚀</span>Forecast</div>
+<div id="mobSync" onclick="fbUser?fbLogout():fbLogin()"><span>☁️</span>Sync</div>
 </div>
 </body>
 </html>
