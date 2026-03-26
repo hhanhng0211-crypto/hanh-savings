@@ -208,3 +208,30 @@ PWA mode (Add to Home Screen):
 3. **Đừng** gọi `cloudSave()` trước khi `pwaReady = true` trong PWA mode
 4. **Đừng** chỉ lắng nghe 1 path Firebase — phải nghe cả `users/` và `shared/`
 5. **Đừng** dùng `signInWithPopup` trên mobile — dùng `signInWithRedirect`
+
+---
+
+### BUG 7 — Giá vàng không cập nhật được / load lâu
+- **Khi nào**: Bấm "🔄 Cập nhật giá" → spinner quay mãi hoặc báo lỗi
+- **Nguyên nhân**: Browser chặn request từ `github.io` tới `vang.today` do CORS policy. Nếu dùng `Promise.race()` thì CORS rejection xảy ra ngay lập tức → race kết thúc bằng lỗi, proxy không được thử
+- **Fix**: Dùng `Promise.any([tryFetch(API), tryFetch(PROXY)])` — thử cả 2 nguồn song song, lấy cái nào thành công trước. Chỉ fail khi CẢ HAI đều fail
+- **API chính**: `https://www.vang.today/api/prices` (key: `SJL1L10.buy / 10` = giá/chỉ)
+- **Proxy fallback**: `https://api.allorigins.win/raw?url=<encoded API>`
+- **Chỗ fix**: hàm `fetchGoldPrices()`
+
+```javascript
+// Đúng — dùng Promise.any
+const tryFetch = async url => { const r = await fetch(url, {cache:'no-cache'}); if(!r.ok) throw new Error(); return r.json(); };
+j = await Promise.any([tryFetch(API), tryFetch(PROXY)]);
+
+// Sai — Promise.race() fail ngay khi có 1 reject bất kỳ
+j = await Promise.race([tryFetch(API), tryFetch(PROXY)]); // ❌
+```
+
+---
+
+## 🚀 Deploy Command
+
+```bash
+cd ~/Desktop/Hanh-Antigravity/Personal/Saving && git add . && git commit -m "mô tả thay đổi" && git push
+```
