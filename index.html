@@ -238,7 +238,7 @@ function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.
 function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
 function forceSync(){toast('🔄 Đang sync...');
   fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã sync thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
-function fbLogin(){fbAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}
+function fbLogin(){const p=new firebase.auth.GoogleAuthProvider();if(/iPhone|iPad|Android/i.test(navigator.userAgent)){fbAuth.signInWithRedirect(p)}else{fbAuth.signInWithPopup(p).catch(e=>toast('⚠️ '+e.message))}}
 function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
   const el=document.getElementById('fbAuth');if(!el)return;
