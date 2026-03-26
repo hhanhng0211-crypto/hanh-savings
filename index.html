@@ -232,6 +232,7 @@ function cloudSave(){if(!fbUser||syncing)return;if(!hasLocalData&&!checkHasData(
 let fbListener=null;
 function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('☁️ Đã đồng bộ!')}},e=>{console.warn('Listen error:',e);toast('⚠️ Lỗi đồng bộ: '+e.message)})}
 function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
+function forceSync(){if(!fbUser){toast('⚠️ Chưa đăng nhập');return}toast('🔄 Đang sync...');fbDb.ref('users/'+fbUser.uid+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã sync thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
 function fbLogin(){const isMob=window.innerWidth<=768;if(isMob){fbAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}else{fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('⚠️ Lỗi đăng nhập: '+e.message))}}
 function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
@@ -731,7 +732,7 @@ document.addEventListener('click',e=>{const mn=e.target.closest('.mob-nav div[da
 <div data-p="assets"><span>💎</span>Tài sản</div>
 <div data-p="savings"><span>🏦</span>TK&Vàng</div>
 <div data-p="forecast"><span>🚀</span>Forecast</div>
-<div id="mobSync" onclick="fbUser?fbLogout():fbLogin()"><span>☁️</span>Sync</div>
+<div id="mobSync" onclick="fbUser?forceSync():fbLogin()"><span>☁️</span>Sync</div>
 </div>
 </body>
 </html>
