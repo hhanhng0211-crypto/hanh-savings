@@ -2,8 +2,12 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Savings">
 <title>💰 Savings Tracker — Hanh</title>
+<link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Black_Piggy_Bank.svg/512px-Black_Piggy_Bank.svg.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -444,6 +448,40 @@ function calcInterest(principal,depositDate,termMonths,ratePercent){
   const matDt=new Date(dep);matDt.setMonth(matDt.getMonth()+(termMonths||0));
   return{current,interest:current-principal,maturity:termMonths?matDt.toISOString().slice(0,10):null}
 }
+function checkMaturity(){
+  const now=new Date();let renewed=0;
+  D.bankDeposits.forEach(bd=>{
+    if(!bd.term||!bd.date)return;
+    const dep=new Date(bd.date);
+    const matDt=new Date(dep);matDt.setMonth(matDt.getMonth()+bd.term);
+    while(matDt<=now){
+      const r=(bd.rate||D.cfg.bankRate)/100/12;
+      const interest=Math.round(bd.amount*Math.pow(1+r,bd.term))-bd.amount;
+      bd.amount+=interest;
+      bd.date=matDt.toISOString().slice(0,10);
+      if(!bd.renewals)bd.renewals=[];
+      bd.renewals.push({date:bd.date,interest,newAmount:bd.amount});
+      matDt.setMonth(matDt.getMonth()+bd.term);
+      renewed++;
+    }
+  });
+  if(renewed>0){
+    save();
+    const matured=D.bankDeposits.filter(bd=>{
+      if(!bd.renewals||!bd.renewals.length)return false;
+      const last=bd.renewals[bd.renewals.length-1];
+      const d=new Date(last.date);const n=new Date();
+      return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
+    });
+    if(matured.length){
+      const msgs=matured.map(bd=>{
+        const last=bd.renewals[bd.renewals.length-1];
+        return `🏦 ${bd.owner}: +${f(last.interest)} lãi → ${f(bd.amount)}`;
+      });
+      setTimeout(()=>toast('🔔 Đáo hạn tự gia hạn!\n'+msgs.join('\n'),5000),1500);
+    }
+  }
+}
 
 function rSav(){
   const now=new Date();
@@ -726,6 +764,7 @@ function exportData(){const d=JSON.stringify(D,null,2);const b=new Blob([d],{typ
 function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(!d.incomes||!d.expenses){toast('⚠️ File không hợp lệ!');return}D=d;save();render();toast('✅ Đã import thành công!')}catch{toast('⚠️ Lỗi đọc file!')}};r.readAsText(file);e.target.value=''}
 
 render();
+checkMaturity();
 // Auto-fetch gold prices on load
 fetchGoldPrices();
 
