@@ -257,6 +257,17 @@ function rFbAuth(){
   if(mu)mu.style.display='block';
 }
 hasLocalData=checkHasData();
+const isPWA=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+let pwaReady=!isPWA;
+if(isPWA){
+  fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{
+    const v=snap.val();
+    if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('☁️ Đã tải data mới nhất!');}
+    pwaReady=true;
+  }).catch(()=>{pwaReady=true;});
+}
+const _cloudSave=cloudSave;
+function cloudSave(){if(!pwaReady)return;_cloudSave();}
 fbAuth.getRedirectResult().then(r=>{if(r&&r.user){toast('✅ Đăng nhập thành công!');setTimeout(forceSync,1000)}}).catch(e=>console.warn('Redirect error:',e));
 fbAuth.onAuthStateChanged(u=>{fbUser=u;rFbAuth();if(u){cloudListen()}else{cloudStop()}});
 function saveTrack(){document.querySelectorAll('#savTb input').forEach(el=>{const k=el.dataset.key,t=el.dataset.type;if(!k||!t)return;if(t==='goldChi'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}else if(t==='depositDate'){if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=el.value}else if(t==='term'||t==='rate'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=v}else{const v=parseInt(el.value.replace(/[,.]/g,''))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}});save();toast('✅ Đã lưu!');render()}
