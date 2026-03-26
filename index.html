@@ -233,24 +233,28 @@ function save(){localStorage.setItem(SK,JSON.stringify(D));cloudSave()}
 let syncing=false,hasLocalData=false;
 const SHARE_CODE='021100';
 function checkHasData(){return D.bankDeposits.length>0||D.goldHoldings.length>0||D.assets.some(a=>a.value>0)}
-function cloudSave(){if(syncing)return;if(!hasLocalData&&!checkHasData())return;hasLocalData=true;
+function cloudSave(){if(syncing)return;hasLocalData=true;
   if(fbUser)fbDb.ref('users/'+fbUser.uid+'/data').set(D).catch(e=>console.warn('Cloud save error:',e));
   fbDb.ref('shared/'+SHARE_CODE+'/data').set(D).catch(e=>console.warn('Share save error:',e));
 }
 let fbListener=null;
 function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('☁️ Đã đồng bộ!')}},e=>{console.warn('Listen error:',e);toast('⚠️ Lỗi đồng bộ: '+e.message)})}
 function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
-function forceSync(){toast('🔄 Đang sync...');
-  fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã sync thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
+function forceSync(){toast('⬇️ Đang tải về...');
+  fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã tải về thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
+function forceUpload(){toast('⬆️ Đang đẩy lên...');
+  fbDb.ref('shared/'+SHARE_CODE+'/data').set(D).then(()=>toast('✅ Đã đẩy lên Firebase!')).catch(e=>toast('⚠️ Lỗi: '+e.message));
+  if(fbUser)fbDb.ref('users/'+fbUser.uid+'/data').set(D).catch(e=>console.warn('Upload error:',e));}
 function fbLogin(){const p=new firebase.auth.GoogleAuthProvider();if(/iPhone|iPad|Android/i.test(navigator.userAgent)){fbAuth.signInWithRedirect(p)}else{fbAuth.signInWithPopup(p).catch(e=>toast('⚠️ '+e.message))}}
 function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
   const el=document.getElementById('fbAuth');if(!el)return;
   if(fbUser){el.innerHTML=`<div style="margin-bottom:8px">☁️ <span style="color:var(--green)">Synced</span></div><div style="font-size:.65rem;color:var(--dim);margin-bottom:6px">${fbUser.email}</div><button class="btn bo" style="font-size:.65rem;padding:3px 10px;width:100%" onclick="fbLogout()">🚪 Đăng xuất</button>`}
   else{el.innerHTML=`<div style="margin-bottom:6px;color:var(--dim)">☁️ Chưa đồng bộ</div><button class="btn bp" style="font-size:.7rem;padding:5px 12px;width:100%" onclick="fbLogin()"><img src="https://www.google.com/favicon.ico" style="width:14px;vertical-align:middle;margin-right:4px"> Đăng nhập Google</button>`}
-  const ml=document.getElementById('mobLogin');const ms=document.getElementById('mobSync');
+  const ml=document.getElementById('mobLogin');const ms=document.getElementById('mobSync');const mu=document.getElementById('mobUpload');
   if(ml)ml.style.display=fbUser?'none':'block';
   if(ms)ms.style.display='block';
+  if(mu)mu.style.display='block';
 }
 hasLocalData=checkHasData();
 fbAuth.getRedirectResult().then(r=>{if(r&&r.user){toast('✅ Đăng nhập thành công!');setTimeout(forceSync,1000)}}).catch(e=>console.warn('Redirect error:',e));
@@ -779,7 +783,8 @@ document.addEventListener('click',e=>{const mn=e.target.closest('.mob-nav div[da
 <div data-p="savings"><span>🏦</span>TK&Vàng</div>
 <div data-p="forecast"><span>🚀</span>Forecast</div>
 <div id="mobLogin" onclick="fbLogin()"><span>🔑</span>Login</div>
-<div id="mobSync" style="display:none" onclick="forceSync()"><span>🔄</span>Sync</div>
+<div id="mobSync" onclick="forceSync()"><span>⬇️</span>Tải về</div>
+<div id="mobUpload" style="display:none" onclick="forceUpload()"><span>⬆️</span>Đẩy lên</div>
 </div>
 </body>
 </html>
