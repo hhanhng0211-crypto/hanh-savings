@@ -234,10 +234,10 @@ function cloudSave(){if(syncing)return;if(!hasLocalData&&!checkHasData())return;
   fbDb.ref('shared/'+SHARE_CODE+'/data').set(D).catch(e=>console.warn('Share save error:',e));
 }
 let fbListener=null;
-function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('☁️ Đã đồng bộ!')}},e=>{console.warn('Listen error:',e);toast('⚠️ Lỗi đồng bộ: '+e.message)})}
+function cloudListen(){if(!fbUser)return;if(fbListener)fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=fbDb.ref('users/'+fbUser.uid+'/data').on('value',snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('☁️ Đã đồng bộ!')}},e=>{console.warn('Listen error:',e);toast('⚠️ Lỗi đồng bộ: '+e.message)})}
 function cloudStop(){if(fbListener&&fbUser){fbDb.ref('users/'+fbUser.uid+'/data').off('value',fbListener);fbListener=null}}
 function forceSync(){toast('🔄 Đang sync...');
-  fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=v;hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã sync thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
+  fbDb.ref('shared/'+SHARE_CODE+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){syncing=true;D=Object.assign(def(),v);hasLocalData=true;localStorage.setItem(SK,JSON.stringify(D));render();syncing=false;toast('✅ Đã sync thành công!')}else{toast('⚠️ Chưa có data trên cloud')}}).catch(e=>toast('⚠️ Lỗi: '+e.message))}
 function fbLogin(){fbAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())}
 function fbLogout(){cloudStop();fbAuth.signOut()}
 function rFbAuth(){
