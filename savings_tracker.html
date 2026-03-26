@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 Savings Tracker — Hanh</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root{--bg:#0a0a14;--sf:#12121f;--card:#1a1a2e;--ch:#1f1f35;--ac:#6c63ff;--ac2:#ff6b9d;--gold:#f5a623;--gold2:#e8941a;--green:#00d68f;--red:#ff4757;--pink:#ff6b9d;--text:#e8e8f0;--dim:#7a7a9a;--bdr:#2a2a45}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{display:flex;min-height:100vh}
+.side{width:250px;background:var(--sf);border-right:1px solid var(--bdr);padding:24px 14px;position:fixed;height:100vh;overflow-y:auto}
+.main{margin-left:250px;flex:1;padding:28px;max-width:960px}
+.logo{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.logo-sub{font-size:.72rem;color:var(--dim);margin-bottom:28px}
+.nav{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:.85rem;color:var(--dim);transition:.2s;margin-bottom:3px}
+.nav:hover,.nav.on{background:rgba(108,99,255,.12);color:var(--text)}.nav.on{color:var(--ac);font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.cd{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:18px;transition:.2s}
+.cd:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.cd .lb{font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.cd .vl{font-size:1.5rem;font-weight:700}.cd .sb{font-size:.72rem;color:var(--dim);margin-top:5px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.st{font-size:1.05rem;font-weight:700}
+.fb{background:linear-gradient(135deg,#1a1a2e,#2a1a3e,#1a2a3e);border:1px solid var(--bdr);border-radius:16px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden}
+.fb .tg{font-size:.78rem;color:var(--ac2);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.fb .bn{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--green),#00b875);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.fb .inf{margin-top:14px;display:flex;gap:28px;flex-wrap:wrap}
+.fb .il{font-size:.68rem;color:var(--dim);text-transform:uppercase}.fb .iv{font-size:1rem;font-weight:700;margin-top:2px}
+.pb{margin-top:16px}.pbg{height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.pf{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ac),var(--green));transition:width .8s}
+.pl{display:flex;justify-content:space-between;font-size:.7rem;color:var(--dim);margin-top:5px}
+.tb{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.tb th{background:var(--sf);padding:11px 12px;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:600}
+.tb th.r{text-align:right}.tb td{padding:10px 12px;border-bottom:1px solid var(--bdr);font-size:.83rem}
+.tb tr:last-child td{border-bottom:none}.tb tr:hover td{background:var(--ch)}
+.tb .r{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.tb .tr td{font-weight:700;background:var(--sf)}
+.inp{width:100%;background:transparent;border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;color:var(--text);font-family:'Inter',sans-serif;font-size:.83rem;text-align:right;font-variant-numeric:tabular-nums;transition:.2s}
+.inp:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px rgba(108,99,255,.2)}
+.inp.gi:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,166,35,.2)}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.66rem;font-weight:600}
+.tag.d{background:rgba(0,214,143,.15);color:var(--green)}.tag.n{background:rgba(108,99,255,.15);color:var(--ac)}.tag.p{background:rgba(122,122,154,.1);color:var(--dim)}
+.btn{padding:9px 22px;border-radius:10px;border:none;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s}
+.bp{background:linear-gradient(135deg,var(--ac),var(--ac2));color:white}.bp:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(108,99,255,.3)}
+.bo{background:transparent;border:1px solid var(--bdr);color:var(--dim)}.bo:hover{border-color:var(--ac);color:var(--text)}
+.bg{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{padding:6px 14px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--dim);font-family:'Inter',sans-serif;font-size:.78rem;cursor:pointer;transition:.2s}
+.pill.on{background:var(--ac);color:white;border-color:var(--ac)}.pill:hover{border-color:var(--ac)}
+.sc{border-radius:14px;padding:18px;border:1px solid var(--bdr)}
+.sc.bk{background:linear-gradient(135deg,rgba(108,99,255,.08),rgba(108,99,255,.02))}
+.sc.gd{background:linear-gradient(135deg,rgba(245,166,35,.08),rgba(245,166,35,.02))}
+.pr{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}.pr:last-child{border-bottom:none}
+.pa{color:white;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;min-width:55px;text-align:center;background:var(--ac)}
+.pa.pg{background:var(--gold)}.pa.pt{background:var(--green)}
+.pw{flex:1}.pp{height:20px;border-radius:10px;background:linear-gradient(90deg,var(--ac),var(--ac2));position:relative;min-width:24px;transition:width .5s}
+.pp.gb{background:linear-gradient(90deg,var(--gold),#e8941a)}.pp.tb2{background:linear-gradient(90deg,var(--ac),var(--gold))}
+.ppl{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.68rem;font-weight:700;white-space:nowrap}
+.pm{min-width:90px;text-align:right;font-weight:700;font-size:.9rem}
+.page{display:none}.page.on{display:block}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;justify-content:center;align-items:center}.mo.show{display:flex}
+.md{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:24px;width:90%;max-width:460px}
+.md h3{margin-bottom:16px;font-size:1rem}
+.fg{margin-bottom:14px}.fg label{display:block;font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.fg .inp{text-align:left}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.85rem;z-index:200;opacity:0;transform:translateY(10px);transition:.3s}.toast.show{opacity:1;transform:translateY(0)}
+.note{text-align:center;color:var(--dim);font-size:.72rem;padding:16px;border-top:1px solid var(--bdr);margin-top:32px;line-height:1.6}
+@media(max-width:768px){.side{display:none}.main{margin-left:0;padding:14px}.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="side">
+<div class="logo">💰 Savings</div>
+<div class="logo-sub">Kế hoạch tài chính — Hanh</div>
+<div class="nav on" data-p="dashboard"><span>📊</span> Tổng quan</div>
+<div class="nav" data-p="income"><span>💵</span> Thu nhập & Chi phí</div>
+<div class="nav" data-p="assets"><span>💎</span> Tài sản hiện có</div>
+
+<div class="nav" data-p="savings"><span>🏦</span> Tiết kiệm & Vàng</div>
+<div class="nav" data-p="overview"><span>📊</span> Overview</div>
+<div class="nav" data-p="forecast"><span>🚀</span> Forecast 1 tỷ</div>
+<div style="margin-top:auto;padding:16px 0;border-top:1px solid rgba(255,255,255,.06)">
+<div id="fbAuth" style="text-align:center;font-size:.75rem"></div>
+</div>
+</div>
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page on" id="p-dashboard">
+<div class="sh"><h1 class="st">📊 Tổng Quan Tài Chính</h1></div>
+<div class="g4" id="dCards"></div>
+<div class="fb" id="fBanner"></div>
+<div class="sh"><h2 class="st">📂 Tiết Kiệm Theo Mục</h2></div>
+<div class="g3" id="sCats"></div>
+</div>
+
+<!-- INCOME & EXPENSES -->
+<div class="page" id="p-income">
+<div class="sh"><h1 class="st">💵 Thu Nhập & Chi Phí Cố Định</h1></div>
+<h3 style="margin-bottom:12px;font-size:.9rem">📥 Nguồn thu nhập</h3>
+<table class="tb"><thead><tr><th>Nguồn</th><th class="r">Số tiền/tháng</th><th class="r"></th></tr></thead><tbody id="incTb"></tbody></table>
+<div class="bg" style="justify-content:flex-start;margin-bottom:24px"><button class="btn bp" onclick="openM('inc')">+ Thêm thu nhập</button></div>
+
+<h3 style="margin-bottom:12px;font-size:.9rem">📤 Chi phí cố định</h3>
+<table class="tb"><thead><tr><th>Khoản chi</th><th class="r">Số tiền/tháng</th><th class="r">% thu nhập</th><th class="r"></th></tr></thead><tbody id="expTb"></tbody></table>
+<div class="bg" style="justify-content:flex-start;margin-bottom:24px"><button class="btn bp" onclick="openM('exp')">+ Thêm chi phí</button></div>
+
+<div class="g3">
+<div class="cd"><div class="lb">Tổng thu nhập</div><div class="vl" style="color:var(--green)" id="dInc">0</div></div>
+<div class="cd"><div class="lb">Tổng chi cố định</div><div class="vl" style="color:var(--ac2)" id="dExp">0</div></div>
+<div class="cd"><div class="lb">Có thể tiết kiệm</div><div class="vl" style="color:var(--ac)" id="dSav">0</div><div class="sb" id="dSavPct"></div></div>
+</div>
+
+<div class="cd" style="margin-top:8px">
+<div class="lb">Phân bổ tiết kiệm mỗi tháng</div>
+<div class="g2" style="margin-top:12px;margin-bottom:0">
+<div><span style="color:var(--dim);font-size:.75rem">🏦 Gửi tiết kiệm</span><div style="font-size:1.2rem;font-weight:700;color:var(--ac);margin-top:4px" id="dBkAmt">0</div><div style="font-size:.72rem;color:var(--dim)" id="dBkPct"></div></div>
+<div><span style="color:var(--dim);font-size:.75rem">🥇 Mua vàng</span><div style="font-size:1.2rem;font-weight:700;color:var(--gold);margin-top:4px" id="dGdAmt">0</div><div style="font-size:.72rem;color:var(--dim)" id="dGdPct"></div></div>
+</div>
+</div>
+</div>
+
+<!-- ASSETS -->
+<div class="page" id="p-assets">
+<div class="sh"><h1 class="st">💎 Tài Sản Hiện Có</h1><button class="btn bp" onclick="openM('ast')">+ Thêm tài sản</button></div>
+<div class="cd" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(245,166,35,.06),rgba(232,148,26,.06))">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong>📡 Giá vàng thị trường</strong><span id="goldStatus" style="font-size:.7rem;padding:4px 10px;border-radius:20px"></span></div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+<div><div class="lb">Vàng 610/chỉ <span id="liveLabel610"></span></div><div style="display:flex;gap:8px;align-items:center"><input class="inp" style="width:160px;text-align:right" id="price610" oninput="updateGoldPrice('610',this.value)" placeholder="0"><span style="font-size:.75rem;color:var(--dim)">VNĐ</span></div></div>
+<div><div class="lb">Vàng 9999/chỉ <span id="liveLabel9999"></span></div><div style="display:flex;gap:8px;align-items:center"><input class="inp" style="width:160px;text-align:right" id="price9999" oninput="updateGoldPrice('9999',this.value)" placeholder="0"><span style="font-size:.75rem;color:var(--dim)">VNĐ</span></div></div>
+<div><button class="btn bo" style="padding:6px 14px;font-size:.75rem" onclick="fetchGoldPrices()">🔄 Cập nhật giá</button></div>
+</div></div>
+<table class="tb"><thead><tr><th>Tài sản</th><th>Loại</th><th>Ghi chú</th><th class="r">Giá trị</th><th class="r"></th></tr></thead><tbody id="astTb"></tbody></table>
+<div class="g3" id="astSum"></div>
+<div class="fb" style="margin-top:16px" id="astTotal"></div>
+</div>
+
+
+
+<!-- SAVINGS & GOLD TRACKING -->
+<div class="page" id="p-savings">
+<div class="sh"><h1 class="st">🏦 Tracking Tiết Kiệm & Vàng</h1><div id="todayDate" style="font-size:.85rem;color:var(--gold);font-weight:600"></div></div>
+<div class="g3" id="savSummary" style="margin-bottom:16px"></div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+<select class="inp" id="selMonth" onchange="cMonth=parseInt(this.value);render()" style="width:130px;text-align:left"></select>
+<select class="inp" id="selYear" onchange="cYear=parseInt(this.value);render()" style="width:110px;text-align:left"></select>
+</div>
+<div id="monthCard"></div>
+<div style="margin-top:24px;border-top:2px solid var(--bdr);padding-top:20px">
+<h2 style="font-size:1rem;margin-bottom:12px">🥇 Tổng quan vàng tích lũy</h2>
+<div class="g2" id="goldCards"></div>
+<div class="cd" style="margin:16px 0" id="goldActualVal"></div>
+<h3 style="margin-bottom:10px;font-size:.9rem">📋 Lịch sử mua vàng</h3>
+<table class="tb"><thead><tr><th>Ngày</th><th>Loại</th><th class="r">Số chỉ</th><th class="r">Giá mua/chỉ</th><th class="r">Tiền mua</th><th class="r">Giá hiện tại</th><th class="r">Lãi/Lỗ</th><th class="r"></th></tr></thead><tbody id="goldHistTb"></tbody></table>
+<div class="bg" style="justify-content:flex-start"><button class="btn bp" onclick="openM('gold')">+ Thêm giao dịch vàng</button></div>
+</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="page" id="p-overview">
+<div class="sh"><h1 class="st">📊 Overview Theo Năm</h1></div>
+<div class="pills" id="ovYPills"></div>
+<div class="g3" id="ovSummary" style="margin-bottom:16px"></div>
+<table class="tb"><thead><tr><th>Tháng</th><th class="r">Mục tiêu</th><th class="r">Hạnh</th><th class="r">Quân</th><th class="r">V.610</th><th class="r">V.9999</th><th class="r">GT Vàng</th><th class="r">Hiện tại (+lãi)</th><th>TT</th></tr></thead><tbody id="ovTb"></tbody></table>
+</div>
+
+<!-- FORECAST -->
+<div class="page" id="p-forecast">
+<div class="sh"><h1 class="st">🚀 Forecast — Các Mốc Tài Sản</h1></div>
+<div id="fMilestones" style="margin-bottom:16px"></div>
+<div class="fb" id="fDetail"></div>
+<h3 style="margin:16px 0 10px;font-size:.9rem">🏦 Tiết kiệm ngân hàng</h3><div class="cd" id="pBank"></div>
+<h3 style="margin:16px 0 10px;font-size:.9rem">🥇 Vàng</h3><div class="cd" id="pGold"></div>
+<h3 style="margin:16px 0 10px;font-size:.9rem">💎 Tổng tài sản</h3><div class="cd" id="pTotal"></div>
+</div>
+
+<div class="note">Inspired by "The Psychology of Money" — Morgan Housel<br>"Lãi kép + thời gian = siêu năng lực 🧊"<br><br><div style="margin-top:8px;display:flex;gap:8px;justify-content:center"><button class="btn bo" style="font-size:.7rem" onclick="exportData()">💾 Export Data</button><button class="btn bo" style="font-size:.7rem" onclick="document.getElementById('importFile').click()">📥 Import Data</button><input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"></div><div style="margin-top:6px;font-size:.65rem;color:var(--dim)">Dữ liệu lưu trên trình duyệt (localStorage). Export để backup hoặc chuyển sang trình duyệt khác.</div></div>
+</div>
+</div>
+
+<div class="mo" id="moOv"><div class="md" id="moCt"></div></div>
+<div class="toast" id="toast"></div>
+
+
+<script>
+// Firebase
+const fbConfig={apiKey:"AIzaSyDY-6cLpo816foYByZ5T9KWXC7b8Tusim4",authDomain:"hanh---savings.firebaseapp.com",databaseURL:"https://hanh---savings-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"hanh---savings",storageBucket:"hanh---savings.firebasestorage.app",messagingSenderId:"878019007339",appId:"1:878019007339:web:30154a2546d026294e722e"};
+const fbApp=firebase.initializeApp(fbConfig);
+const fbAuth=firebase.auth();
+const fbDb=firebase.database();
+let fbUser=null;
+
+const C={SY:2026,SA:25,YR:15,BR:0.06,GR:0.10,AI:0.10};
+const SK='hanh_finance_v4';
+let D=load(), cYear=new Date().getFullYear(), cMonth=new Date().getMonth(), cPage='dashboard';
+
+function def(){return{
+  incomes:[{id:1,name:'Lương chính',amount:17000000}],
+  expenses:[
+    {id:1,name:'Trả góp ĐT',amount:1300000},{id:2,name:'Điện nước, internet',amount:1200000},
+    {id:3,name:'Học phí cho em',amount:1700000},{id:4,name:'Học nhảy 💃',amount:800000},
+    {id:5,name:'Thức ăn mèo 🐱',amount:500000},{id:6,name:'Mạng + di chuyển',amount:800000},
+    {id:7,name:'Ăn ngoài',amount:1500000}
+  ],
+  assets:[{id:1,name:'Tiền mặt',type:'cash',note:'TK ngân hàng',value:0},{id:2,name:'Sổ tiết kiệm Cake',type:'bank',note:'Lãi 6%/năm',value:0}],
+  goldHoldings:[],
+  bankDeposits:[],
+  goldPrices:{g610:10486000,g9999:17050000},
+  tracking:{},
+  cfg:{bankRate:6,goldRate:10,annualInc:10,bankPct:72,goldPct:28},
+  monthTargets:{'2026-2':{bank:72000000,gold:28000000}},
+  dashTarget:1e9
+}}
+
+function load(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.incomes&&d.expenses){if(!d.goldHoldings)d.goldHoldings=[];if(!d.bankDeposits)d.bankDeposits=[];if(!d.goldPrices)d.goldPrices={g610:10486000,g9999:17050000};if(d.goldPrices.g610<=9600000)d.goldPrices.g610=10486000;if(d.goldPrices.g9999<=10800000)d.goldPrices.g9999=17050000;if(!d.monthTargets)d.monthTargets={};if(!d.monthTargets['2026-2'])d.monthTargets['2026-2']={bank:72000000,gold:28000000};if(typeof d.monthTargets['2026-2']==='number'){const v=d.monthTargets['2026-2'];d.monthTargets['2026-2']={bank:Math.round(v*0.72),gold:Math.round(v*0.28)}}if(!d.dashTarget)d.dashTarget=1e9;return d}}const old=localStorage.getItem('hanh_savings')||localStorage.getItem('hanh_finance_v2')||localStorage.getItem('hanh_finance_v3');const b=def();if(old){try{const o=JSON.parse(old);if(o.tracking)b.tracking=o.tracking;else if(typeof o==='object')b.tracking=o;}catch{}}return b}catch{return def()}}
+function save(){localStorage.setItem(SK,JSON.stringify(D));cloudSave()}
+function cloudSave(){if(!fbUser)return;fbDb.ref('users/'+fbUser.uid+'/data').set(D).catch(e=>console.warn('Cloud save error:',e))}
+function cloudLoad(){if(!fbUser)return;fbDb.ref('users/'+fbUser.uid+'/data').once('value').then(snap=>{const v=snap.val();if(v&&v.incomes){D=v;localStorage.setItem(SK,JSON.stringify(D));render();toast('☁️ Đã đồng bộ từ cloud!')}}).catch(e=>console.warn('Cloud load error:',e))}
+function fbLogin(){fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('⚠️ Lỗi đăng nhập: '+e.message))}
+function fbLogout(){fbAuth.signOut()}
+function rFbAuth(){
+  const el=document.getElementById('fbAuth');if(!el)return;
+  if(fbUser){el.innerHTML=`<div style="margin-bottom:8px">☁️ <span style="color:var(--green)">Synced</span></div><div style="font-size:.65rem;color:var(--dim);margin-bottom:6px">${fbUser.email}</div><button class="btn bo" style="font-size:.65rem;padding:3px 10px;width:100%" onclick="fbLogout()">🚪 Đăng xuất</button>`}
+  else{el.innerHTML=`<div style="margin-bottom:6px;color:var(--dim)">☁️ Chưa đồng bộ</div><button class="btn bp" style="font-size:.7rem;padding:5px 12px;width:100%" onclick="fbLogin()"><img src="https://www.google.com/favicon.ico" style="width:14px;vertical-align:middle;margin-right:4px"> Đăng nhập Google</button>`}
+}
+fbAuth.onAuthStateChanged(u=>{fbUser=u;rFbAuth();if(u){cloudLoad()}});
+function saveTrack(){document.querySelectorAll('#savTb input').forEach(el=>{const k=el.dataset.key,t=el.dataset.type;if(!k||!t)return;if(t==='goldChi'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}else if(t==='depositDate'){if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=el.value}else if(t==='term'||t==='rate'){const v=parseFloat(el.value.replace(/,/g,'.'))||0;if(!D.tracking[el.dataset.key])D.tracking[el.dataset.key]={};D.tracking[el.dataset.key][t]=v}else{const v=parseInt(el.value.replace(/[,.]/g,''))||0;if(!D.tracking[k])D.tracking[k]={};D.tracking[k][t]=v}});save();toast('✅ Đã lưu!');render()}
+
+function f(n){if(n>=1e9)return(n/1e9).toFixed(2)+' tỷ';if(n>=1e6)return(n/1e6).toFixed(1)+'tr';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toLocaleString('vi-VN')}
+function ff(n){return n.toLocaleString('vi-VN')}
+function tInc(){return D.incomes.reduce((s,i)=>s+i.amount,0)}
+function tExp(){return D.expenses.reduce((s,e)=>s+e.amount,0)}
+function tSav(){return Math.max(0,tInc()-tExp())}
+function goldValue(){let t610=0,t9999=0;D.goldHoldings.forEach(g=>{if(g.type==='610')t610+=g.chi;else t9999+=g.chi});return{chi610:t610,chi9999:t9999,val610:t610*D.goldPrices.g610,val9999:t9999*D.goldPrices.g9999,total:t610*D.goldPrices.g610+t9999*D.goldPrices.g9999}}
+function tAst(){const trk=tTrk();return D.assets.reduce((s,a)=>s+a.value,0)+goldValue().total+trk.bank}
+function tTrk(){let b=0,g=0,gc=0;b=D.bankDeposits.reduce((s,d)=>s+d.amount,0);Object.values(D.tracking).forEach(d=>{g+=(d.gold||0);gc+=(d.goldChi||0)});return{bank:b,gold:g,goldChi:gc,total:b+g}}
+
+// Savings split based on bankPct/goldPct of available savings
+function savSplit(){const s=tSav();return{bank:Math.round(s*D.cfg.bankPct/100),gold:Math.round(s*D.cfg.goldPct/100)}}
+function savSplitY(yi){const mult=Math.pow(1+D.cfg.annualInc/100,yi);const s=tSav()*mult;return{bank:Math.round(s*D.cfg.bankPct/100),gold:Math.round(s*D.cfg.goldPct/100)}}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+// NAV
+document.querySelectorAll('.nav').forEach(n=>n.addEventListener('click',()=>{cPage=n.dataset.p;document.querySelectorAll('.nav').forEach(x=>x.classList.remove('on'));n.classList.add('on');document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+cPage).classList.add('on');render()}));
+function updateGoldPrice(type,val){const v=parseInt(val.replace(/[,.]/g,''))||0;D.goldPrices['g'+type]=v;save();render()}
+
+// LIVE GOLD PRICE FETCH
+let liveStatus='idle';
+async function fetchGoldPrices(){
+  liveStatus='loading';rGoldStatus();
+  try{
+    const r=await fetch('https://www.vang.today/api/prices');
+    const j=await r.json();
+    if(j.success&&j.prices){
+      // SJC 9999 miếng: SJL1L10, prices per lượng (10 chỉ) → divide by 10
+      const sjc=j.prices.SJL1L10;
+      if(sjc){
+        D.goldPrices.g9999=Math.round(sjc.buy/10); // buy price per chỉ
+        // Estimate 610 sell price from 9999: market ratio ~61.5% (based on PNJ sell price)
+        D.goldPrices.g610=Math.round(D.goldPrices.g9999*0.615);
+      }
+      save();liveStatus='ok';
+      D.goldPriceDate=j.date+' '+j.time;
+      toast('✅ Giá vàng: 9999='+ff(D.goldPrices.g9999)+' | 610='+ff(D.goldPrices.g610)+'/chỉ');
+    }else{liveStatus='error'}
+  }catch(e){liveStatus='error';toast('⚠️ Không thể lấy giá vàng. Kiểm tra kết nối.')}
+  render();
+}
+function rGoldStatus(){
+  const el=document.getElementById('goldStatus');if(!el)return;
+  if(liveStatus==='ok')el.innerHTML='<span style="color:var(--green)">🟢 Live</span>'+(D.goldPriceDate?' <span style="color:var(--dim)">'+D.goldPriceDate+'</span>':'');
+  else if(liveStatus==='loading')el.innerHTML='<span style="color:var(--gold)">⏳ Đang tải...</span>';
+  else if(liveStatus==='error')el.innerHTML='<span style="color:var(--red)">🔴 Lỗi kết nối</span>';
+  else el.innerHTML='<span style="color:var(--dim)">⚪ Chưa cập nhật</span>';
+  const lbl=document.getElementById('liveLabel9999');
+  if(lbl)lbl.innerHTML=liveStatus==='ok'?'<span style="color:var(--green);font-size:.6rem">● LIVE</span>':'';
+  const lbl6=document.getElementById('liveLabel610');
+  if(lbl6)lbl6.innerHTML=liveStatus==='ok'?'<span style="color:var(--green);font-size:.6rem">● LIVE</span>':'';
+}
+
+// FORECAST ENGINE
+function forecast(){
+  const br=(D.cfg.bankRate/100)/12, gr=(D.cfg.goldRate/100)/12;
+  let bB=D.assets.filter(a=>a.type==='bank').reduce((s,a)=>s+a.value,0);
+  let gB=goldValue().total;
+  const cash=D.assets.filter(a=>a.type==='cash').reduce((s,a)=>s+a.value,0);
+  const milestones=[{target:5e8,label:'500 triệu',icon:'🎯',found:null},{target:1e9,label:'1 tỷ',icon:'💰',found:null},{target:2e9,label:'2 tỷ',icon:'💎',found:null},{target:3e9,label:'3 tỷ',icon:'🚀',found:null}];
+  const yd=[];
+  for(let y=0;y<C.YR;y++){
+    const sp=savSplitY(y);
+    for(let m=0;m<12;m++){bB=bB*(1+br)+sp.bank;gB=gB*(1+gr)+sp.gold;const t=bB+gB+cash;milestones.forEach(ms=>{if(!ms.found&&t>=ms.target)ms.found={year:C.SY+y,month:m+1,age:C.SA+y,total:t}})}
+    yd.push({age:C.SA+y+1,year:C.SY+y+1,bank:bB,gold:gB,total:bB+gB+cash})
+  }
+  return{milestones,yd,cur:tAst(),tm:milestones[1].found}
+}
+function forecastTarget(target){
+  const br=(D.cfg.bankRate/100)/12,gr=(D.cfg.goldRate/100)/12;
+  let bB=D.assets.filter(a=>a.type==='bank').reduce((s,a)=>s+a.value,0),gB=goldValue().total;
+  const cash=D.assets.filter(a=>a.type==='cash').reduce((s,a)=>s+a.value,0);
+  for(let y=0;y<C.YR;y++){const sp=savSplitY(y);for(let m=0;m<12;m++){bB=bB*(1+br)+sp.bank;gB=gB*(1+gr)+sp.gold;const t=bB+gB+cash;if(t>=target)return{year:C.SY+y,month:m+1,age:C.SA+y,total:t}}}
+  return null;
+}
+
+// RENDER
+function rDash(){
+  const inc=tInc(),exp=tExp(),sv=tSav(),ast=tAst(),trk=tTrk(),fc=forecast(),sp=savSplit();
+  const dt=D.dashTarget,dtFc=forecastTarget(dt);
+  document.getElementById('dCards').innerHTML=`
+    <div class="cd"><div class="lb">Thu nhập/tháng</div><div class="vl" style="color:var(--green)">${f(inc)}</div></div>
+    <div class="cd"><div class="lb">Tài sản hiện có</div><div class="vl" style="color:var(--ac)">${f(ast)}</div></div>
+    <div class="cd"><div class="lb">Tiết kiệm/tháng</div><div class="vl" style="color:var(--gold)">${f(sv)}</div><div class="sb">${inc?((sv/inc)*100).toFixed(1):'0'}% thu nhập</div></div>
+    <div class="cd"><div class="lb">Forecast ${f(dt)}</div><div class="vl" style="color:var(--ac2)">${dtFc?dtFc.age+' tuổi':'—'}</div><div class="sb">${dtFc?'T'+dtFc.month+'/'+dtFc.year:'>'+String(C.SA+C.YR)+'t'}</div></div>`;
+  const pct=Math.min((ast/dt)*100,100);
+  document.getElementById('fBanner').innerHTML=`
+    <div class="tg">🎯 MỤC TIÊU: ${f(dt).toUpperCase()} <button class="btn bo" style="padding:1px 5px;font-size:.6rem;vertical-align:middle" onclick="editDashTarget()">✏️</button></div><div class="bn">${f(ast)} / ${f(dt)}</div>
+    <div class="pb"><div class="pbg"><div class="pf" style="width:${pct}%"></div></div><div class="pl"><span>${pct.toFixed(1)}%</span><span>${dtFc?'Dự kiến: T'+dtFc.month+'/'+dtFc.year+' ('+dtFc.age+' tuổi)':'>'+String(C.SA+C.YR)+' năm'}</span></div></div>
+    <div class="inf">
+      <div><div class="il">Tiết kiệm/tháng</div><div class="iv" style="color:var(--green)">${f(sv)}</div></div>
+      <div><div class="il">🏦 ${D.cfg.bankPct}%</div><div class="iv" style="color:var(--ac)">${f(sp.bank)}</div></div>
+      <div><div class="il">🥇 ${D.cfg.goldPct}%</div><div class="iv" style="color:var(--gold)">${f(sp.gold)}</div></div>
+    </div>`;
+  const bkA=D.assets.filter(a=>a.type==='bank').reduce((s,a)=>s+a.value,0);
+  const trk2=tTrk();
+  const totalBank=bkA+trk2.bank;
+  // Weighted avg rate from tracking
+  let wRate=0,wDep=0;Object.values(D.tracking).forEach(d=>{if(d.bank>0){wRate+=d.bank*(d.rate||D.cfg.bankRate);wDep+=d.bank}});
+  const avgR=wDep>0?(wRate/wDep).toFixed(1):D.cfg.bankRate;
+  const gv=goldValue();
+  document.getElementById('sCats').innerHTML=`
+    <div class="sc bk"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🏦 Gửi Tiết Kiệm</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(108,99,255,.15);color:var(--ac)">Lãi TB ${avgR}%/năm</span></div>
+      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">SỐ DƯ</div><div style="font-size:1.1rem;font-weight:700;color:var(--ac)">${f(totalBank)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GỬI/THÁNG</div><div style="font-size:1.1rem;font-weight:700">${f(sp.bank)}</div></div></div></div>
+    <div class="sc gd"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🥇 Vàng 610</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(245,166,35,.15);color:var(--gold)">${gv.chi610.toFixed(1)} chỉ</span></div>
+      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${f(gv.val610)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GIÁ/CHỈ</div><div style="font-size:1.1rem;font-weight:700">${f(D.goldPrices.g610)}</div></div></div></div>
+    <div class="sc gd"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🥇 Vàng 9999</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(232,148,26,.15);color:var(--gold2)">${gv.chi9999.toFixed(1)} chỉ</span></div>
+      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold2)">${f(gv.val9999)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GIÁ/CHỈ</div><div style="font-size:1.1rem;font-weight:700">${f(D.goldPrices.g9999)}</div></div></div></div>`;
+}
+
+function rIncome(){
+  const inc=tInc(),exp=tExp(),sv=tSav(),sp=savSplit();
+  document.getElementById('incTb').innerHTML=D.incomes.map(i=>`<tr><td><strong>${i.name}</strong></td><td class="r" style="color:var(--green)">${ff(i.amount)}</td><td class="r"><button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="editInc(${i.id})">✏️</button> <button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="delInc(${i.id})">🗑️</button></td></tr>`).join('');
+  document.getElementById('expTb').innerHTML=D.expenses.map(e=>`<tr><td>${e.name}</td><td class="r" style="color:var(--ac2)">${ff(e.amount)}</td><td class="r">${inc?((e.amount/inc)*100).toFixed(1):'0'}%</td><td class="r"><button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="editExp(${e.id})">✏️</button> <button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="delExp(${e.id})">🗑️</button></td></tr>`).join('')+`<tr class="tr"><td><strong>TỔNG</strong></td><td class="r">${ff(exp)}</td><td class="r">${inc?((exp/inc)*100).toFixed(1):'0'}%</td><td></td></tr>`;
+  document.getElementById('dInc').textContent=f(inc);
+  document.getElementById('dExp').textContent=f(exp);
+  document.getElementById('dSav').textContent=f(sv);
+  document.getElementById('dSavPct').textContent=inc?((sv/inc)*100).toFixed(1)+'% thu nhập':'';
+  document.getElementById('dBkAmt').textContent=f(sp.bank);
+  document.getElementById('dBkPct').textContent=`${D.cfg.bankPct}% tiết kiệm → Lãi ${D.cfg.bankRate}%/năm`;
+  document.getElementById('dGdAmt').textContent=f(sp.gold);
+  document.getElementById('dGdPct').textContent=`${D.cfg.goldPct}% tiết kiệm → KV ${D.cfg.goldRate}%/năm`;
+}
+
+function rAssets(){
+  const tl={cash:'💵 Tiền mặt',bank:'🏦 Ngân hàng',other:'📦 Khác'};
+  const cl={cash:'var(--green)',bank:'var(--ac)',other:'var(--dim)'};
+  document.getElementById('astTb').innerHTML=D.assets.map(a=>{
+    let detail=a.note||'—';
+    if(a.type==='bank'){
+      const parts=[];
+      if(a.depositDate)parts.push('Gửi: '+a.depositDate);
+      if(a.term)parts.push('Kỳ hạn: '+a.term+'T');
+      if(a.rate)parts.push('Lãi: '+a.rate+'%/năm');
+      if(a.depositDate&&a.term){
+        const md=new Date(a.depositDate);md.setMonth(md.getMonth()+a.term);
+        parts.push('Đáo hạn: '+md.toISOString().slice(0,10));
+      }
+      if(parts.length)detail=parts.join(' | ');
+    }
+    return `<tr><td><strong>${a.name}</strong></td><td><span class="dot" style="background:${cl[a.type]||cl.other}"></span> ${tl[a.type]||a.type}</td><td style="color:var(--dim);font-size:.75rem">${detail}</td><td class="r" style="color:${cl[a.type]||cl.other}">${ff(a.value)}</td><td class="r"><button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="editAst(${a.id})">✏️</button> <button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="delAst(${a.id})">🗑️</button></td></tr>`
+  }).join('');
+  const cash=D.assets.filter(a=>a.type==='cash').reduce((s,a)=>s+a.value,0);
+  const bank=D.assets.filter(a=>a.type==='bank').reduce((s,a)=>s+a.value,0);
+  const gv=goldValue();
+  const trk=tTrk();
+  const bankTotal=bank+trk.bank;
+  const total=cash+bankTotal+gv.total;
+  document.getElementById('astSum').innerHTML=`<div class="cd"><div class="lb">💵 Tiền mặt</div><div class="vl" style="color:var(--green)">${f(cash)}</div></div><div class="cd"><div class="lb">🏦 Ngân hàng</div><div class="vl" style="color:var(--ac)">${f(bankTotal)}</div><div class="sb">Sổ TK: ${f(bank)} + Tracking: ${f(trk.bank)}</div></div><div class="cd"><div class="lb">🥇 Vàng (tổng)</div><div class="vl" style="color:var(--gold)">${f(gv.total)}</div><div class="sb">${gv.chi610.toFixed(1)} chỉ 610 + ${gv.chi9999.toFixed(1)} chỉ 9999</div></div>`;
+  document.getElementById('astTotal').innerHTML=`
+    <div class="tg">💰 TỔNG TÀI SẢN</div>
+    <div class="bn" style="color:var(--green)">${f(total)}</div>
+    <div class="inf"><div><div class="il">💵 Tiền mặt</div><div class="iv">${f(cash)}</div></div><div><div class="il">🏦 Ngân hàng</div><div class="iv" style="color:var(--ac)">${f(bankTotal)}</div></div><div><div class="il">🥇 Vàng</div><div class="iv" style="color:var(--gold)">${f(gv.total)}</div></div></div>`;
+  const p610=document.getElementById('price610');if(p610)p610.value=ff(D.goldPrices.g610);
+  const p9999=document.getElementById('price9999');if(p9999)p9999.value=ff(D.goldPrices.g9999);
+}
+
+function rGold(){
+  const gv=goldValue();
+  // Total cost vs current market value
+  let totalCost=0;D.goldHoldings.forEach(g=>totalCost+=g.chi*g.price);
+  const totalMarket=gv.total;
+  const pnl=totalMarket-totalCost;
+  document.getElementById('goldCards').innerHTML=`
+    <div class="cd"><div class="lb">🥇 Vàng 610</div><div class="vl" style="color:var(--gold)">${gv.chi610.toFixed(1)} chỉ</div><div class="sb">Giá TT: ${ff(D.goldPrices.g610)}/chỉ → ≈ ${f(gv.val610)}</div></div>
+    <div class="cd"><div class="lb">🥇 Vàng 9999</div><div class="vl" style="color:var(--gold2)">${gv.chi9999.toFixed(1)} chỉ</div><div class="sb">Giá TT: ${ff(D.goldPrices.g9999)}/chỉ → ≈ ${f(gv.val9999)}</div></div>`;
+  // Actual value card
+  document.getElementById('goldActualVal').innerHTML=`
+    <div class="g3" style="margin-bottom:0">
+      <div><div class="lb">Tổng tiền mua</div><div style="font-size:1.1rem;font-weight:700">${f(totalCost)}</div></div>
+      <div><div class="lb">Giá trị hiện tại (thị trường)</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${f(totalMarket)}</div></div>
+      <div><div class="lb">Lãi / Lỗ</div><div style="font-size:1.1rem;font-weight:700;color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${f(pnl)} (${totalCost?((pnl/totalCost)*100).toFixed(1):'0'}%)</div></div>
+    </div>`;
+  // History with P&L per row
+  document.getElementById('goldHistTb').innerHTML=D.goldHoldings.map(g=>{
+    const curPrice=g.type==='610'?D.goldPrices.g610:D.goldPrices.g9999;
+    const cost=g.chi*g.price;const market=g.chi*curPrice;const pl=market-cost;
+    return `<tr><td>${g.date||'—'}</td><td style="color:${g.type==='610'?'var(--gold)':'var(--gold2)'}">${g.type==='610'?'V.610':'V.9999'}</td><td class="r">${g.chi}</td><td class="r">${ff(g.price)}</td><td class="r">${ff(cost)}</td><td class="r" style="color:var(--gold)">${ff(curPrice)}</td><td class="r" style="color:${pl>=0?'var(--green)':'var(--red)'}">${pl>=0?'+':''}${ff(pl)}</td><td class="r"><button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="editGold(${g.id})">✏️</button> <button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="delGold(${g.id})">🗑️</button></td></tr>`
+  }).join('');
+  rGoldStatus();
+}
+
+function calcInterest(principal,depositDate,termMonths,ratePercent){
+  if(!principal||!depositDate)return{current:principal,interest:0,maturity:null};
+  const now=new Date(),dep=new Date(depositDate);
+  const monthsElapsed=Math.max(0,(now.getFullYear()-dep.getFullYear())*12+(now.getMonth()-dep.getMonth()));
+  const r=(ratePercent||D.cfg.bankRate)/100/12;
+  const current=Math.round(principal*Math.pow(1+r,monthsElapsed));
+  const matDt=new Date(dep);matDt.setMonth(matDt.getMonth()+(termMonths||0));
+  return{current,interest:current-principal,maturity:termMonths?matDt.toISOString().slice(0,10):null}
+}
+
+function rSav(){
+  const now=new Date();
+  const days=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  document.getElementById('todayDate').innerHTML=`📅 ${days[now.getDay()]}, ${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
+  
+  // Summary from bankDeposits
+  let totalDep=0,totalCur=0,totalInt=0,weightedRate=0,byOwner={};
+  D.bankDeposits.forEach(bd=>{
+    const ci=calcInterest(bd.amount,bd.date,bd.term,bd.rate);
+    totalDep+=bd.amount;totalCur+=ci.current;totalInt+=ci.interest;weightedRate+=bd.amount*(bd.rate||D.cfg.bankRate);
+    const own=bd.owner||'Chung';if(!byOwner[own])byOwner[own]=0;byOwner[own]+=bd.amount;
+  });
+  const avgRate=totalDep>0?(weightedRate/totalDep).toFixed(1):D.cfg.bankRate;
+  document.getElementById('savSummary').innerHTML=`
+    <div class="cd"><div class="lb">🏦 Tổng tiền gửi</div><div class="vl" style="color:var(--ac)">${f(totalDep)}</div></div>
+    <div class="cd"><div class="lb">💰 Giá trị hiện tại</div><div class="vl" style="color:var(--green)">${f(totalCur)}</div><div class="sb">+${f(totalInt)} lãi</div></div>
+    <div class="cd"><div class="lb">📈 Lãi suất TB</div><div class="vl">${avgRate}%/năm</div></div>
+    <div class="cd"><div class="lb">👥 Theo người gửi</div><div class="vl" style="font-size:.85rem">${Object.entries(byOwner).map(([n,v])=>'<div style="display:flex;justify-content:space-between"><span>'+n+'</span><span style="font-weight:700;color:var(--ac)">'+f(v)+'</span></div>').join('')||'<span style="color:var(--dim)">Chưa có</span>'}</div></div>`;
+
+  // Month/Year selectors
+  const mNames=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  const sm=document.getElementById('selMonth');sm.innerHTML=mNames.map((n,i)=>`<option value="${i}" ${i===cMonth?'selected':''}>${n}</option>`).join('');
+  const sy=document.getElementById('selYear');sy.innerHTML='';for(let i=0;i<C.YR;i++){const y=C.SY+i;sy.innerHTML+=`<option value="${y}" ${y===cYear?'selected':''}>${y} (${C.SA+i}t)</option>`}
+
+  // Current month card
+  const k=`${cYear}-${cMonth}`,d=D.tracking[k]||{},yi=cYear-C.SY,sp=savSplitY(Math.max(0,yi));
+  const isCur=cYear===now.getFullYear()&&cMonth===now.getMonth();
+  // Bank deposits for this month
+  const mBanks=D.bankDeposits.filter(bd=>{const dt=new Date(bd.date);return dt.getFullYear()===cYear&&dt.getMonth()===cMonth});
+  const mBankTotal=mBanks.reduce((s,bd)=>s+bd.amount,0);
+  let monthBankList='';
+  if(mBanks.length){
+    monthBankList='<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px"><div style="font-size:.72rem;color:var(--dim);margin-bottom:8px">GIAO DỊCH THÁNG NÀY ('+f(mBankTotal)+')</div>';
+    mBanks.forEach(bd=>{
+      const ci=calcInterest(bd.amount,bd.date,bd.term,bd.rate);
+      monthBankList+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><span style="font-weight:600;color:var(--ac)">${bd.owner||'—'}</span> <span style="font-size:.8rem">${f(bd.amount)}</span> <span style="font-size:.72rem;color:var(--dim)">${bd.rate||D.cfg.bankRate}% | ${bd.term||0}th</span>${ci.interest>0?' <span style="font-size:.72rem;color:var(--green)">+'+f(ci.interest)+'</span>':''}</div><div style="display:flex;gap:4px"><button class="btn bo" style="padding:2px 8px;font-size:.68rem" onclick="editBankDep(${bd.id})">✏️</button><button class="btn bo" style="padding:2px 8px;font-size:.68rem" onclick="delBankDep(${bd.id})">🗑️</button></div></div>`;
+    });
+    monthBankList+='</div>';
+  }
+  // Gold transactions for this month
+  const mGolds=D.goldHoldings.filter(g=>{const dt=new Date(g.date);return dt.getFullYear()===cYear&&dt.getMonth()===cMonth});
+  const mGoldTotal=mGolds.reduce((s,g)=>s+g.chi*g.price,0);
+  const mGoldChi=mGolds.reduce((s,g)=>s+g.chi,0);
+  let monthGoldList='';
+  if(mGolds.length){
+    monthGoldList='<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px"><div style="font-size:.72rem;color:var(--dim);margin-bottom:8px">GIAO DỊCH THÁNG NÀY ('+mGoldChi.toFixed(1)+' chỉ = '+f(mGoldTotal)+')</div>';
+    mGolds.forEach(g=>{
+      const curP=g.type==='610'?D.goldPrices.g610:D.goldPrices.g9999;
+      const pl=g.chi*curP-g.chi*g.price;
+      monthGoldList+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><span style="color:${g.type==='610'?'var(--gold)':'var(--gold2)'};font-weight:600">${g.type==='610'?'V.610':'V.9999'}</span> <span style="font-size:.8rem">${g.chi} chỉ × ${ff(g.price)}</span> <span style="font-size:.72rem;color:${pl>=0?'var(--green)':'var(--red)'}">${pl>=0?'+':''}${ff(pl)}</span></div><div style="display:flex;gap:4px"><button class="btn bo" style="padding:2px 8px;font-size:.68rem" onclick="editGold(${g.id})">✏️</button><button class="btn bo" style="padding:2px 8px;font-size:.68rem" onclick="delGold(${g.id})">🗑️</button></div></div>`;
+    });
+    monthGoldList+='</div>';
+  }
+  document.getElementById('monthCard').innerHTML=`
+    <div class="fb" style="margin-bottom:16px">
+      <div class="tg">📅 T${cMonth+1}/${cYear} ${isCur?'<span style="color:var(--green)">● Hiện tại</span>':''}</div>
+      <div class="inf" style="margin-top:12px">
+        <div><div class="il">🏦 Mục tiêu gửi <button class="btn bo" style="padding:1px 5px;font-size:.6rem" onclick="editMonthTarget('${cYear}-${cMonth}')">✏️</button>${D.monthTargets[cYear+'-'+cMonth]?'<span style="color:var(--gold);font-size:.65rem"> ★</span>':''}</div><div class="iv" style="color:var(--ac)">${f(D.monthTargets[cYear+'-'+cMonth]?D.monthTargets[cYear+'-'+cMonth].bank:sp.bank)}</div></div>
+        <div><div class="il">🥇 Mục tiêu vàng</div><div class="iv" style="color:var(--gold)">${f(D.monthTargets[cYear+'-'+cMonth]?D.monthTargets[cYear+'-'+cMonth].gold:sp.gold)}</div></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="cd" style="padding:16px">
+        <h3 style="margin-bottom:14px;font-size:.9rem">🏦 Gửi tiết kiệm</h3>
+        <div class="fg"><label>Số tiền gửi</label><input class="inp" id="tkBank" placeholder="0" style="text-align:right"></div>
+        <div class="fg"><label>Người gửi</label><select class="inp" id="tkOwner" style="text-align:left"><option value="Hạnh">Hạnh</option><option value="Quân">Quân</option></select></div>
+        <div class="fg"><label>Ngày gửi</label><input class="inp" id="tkDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="fg"><label>Kỳ hạn (tháng)</label><input class="inp" id="tkTerm" placeholder="6" style="text-align:right"></div>
+        <div class="fg"><label>Lãi suất (%/năm)</label><input class="inp" id="tkRate" value="${D.cfg.bankRate}" placeholder="6" style="text-align:right"></div>
+        <div class="bg" style="margin-top:8px"><button class="btn bp" onclick="addBankDep()" style="width:100%">+ Thêm gửi tiết kiệm</button></div>
+        ${monthBankList}
+      </div>
+      <div class="cd" style="padding:16px">
+        <h3 style="margin-bottom:14px;font-size:.9rem">🥇 Mua vàng</h3>
+        <div class="fg"><label>Loại vàng</label><select class="inp" id="tkGoldType" style="text-align:left"><option value="610">Vàng 610</option><option value="9999">Vàng 9999</option></select></div>
+        <div class="fg"><label>Số chỉ</label><input class="inp" id="tkGoldChi" placeholder="1" style="text-align:right"></div>
+        <div class="fg"><label>Giá mua/chỉ</label><input class="inp" id="tkGoldPrice" placeholder="${ff(D.goldPrices.g610)}" style="text-align:right"></div>
+        <div class="bg" style="margin-top:8px"><button class="btn bp" onclick="addMonthGold()" style="width:100%">+ Thêm giao dịch vàng</button></div>
+        ${monthGoldList}
+      </div>
+    </div>
+    <div class="bg" style="margin-top:16px"><button class="btn bp" onclick="saveMonth()">💾 Lưu T${cMonth+1}/${cYear}</button></div>`;
+}
+
+function addMonthGold(){
+  const type=document.getElementById('tkGoldType').value;
+  const chi=parseFloat(document.getElementById('tkGoldChi').value.replace(/,/g,'.'))||0;
+  const price=parseInt(document.getElementById('tkGoldPrice').value.replace(/[,.]/g,''))||0;
+  if(!chi||!price){toast('⚠️ Nhập số chỉ và giá mua');return}
+  const date=`${cYear}-${String(cMonth+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  D.goldHoldings.push({id:Date.now(),type,chi,price,date});
+  // Update tracking goldChi sum
+  const k=`${cYear}-${cMonth}`;if(!D.tracking[k])D.tracking[k]={};
+  const mGolds=D.goldHoldings.filter(g=>{const d=new Date(g.date);return d.getFullYear()===cYear&&d.getMonth()===cMonth});
+  D.tracking[k].goldChi=mGolds.reduce((s,g)=>s+g.chi,0);
+  D.tracking[k].gold=mGolds.reduce((s,g)=>s+g.chi*g.price,0);
+  save();toast('✅ Đã thêm '+chi+' chỉ '+type);render();
+}
+
+function addBankDep(){
+  const amt=parseInt(document.getElementById('tkBank').value.replace(/[,.]/g,''))||0;
+  const owner=document.getElementById('tkOwner').value;
+  const date=document.getElementById('tkDate').value;
+  const term=parseFloat(document.getElementById('tkTerm').value)||0;
+  const rate=parseFloat(document.getElementById('tkRate').value)||0;
+  if(!amt){toast('⚠️ Nhập số tiền gửi');return}
+  D.bankDeposits.push({id:Date.now(),amount:amt,owner,date:date||`${cYear}-${String(cMonth+1).padStart(2,'0')}-01`,term,rate});
+  save();toast('✅ Đã thêm '+f(amt)+' ('+owner+')');render();
+}
+function editBankDep(id){
+  const bd=D.bankDeposits.find(b=>b.id===id);if(!bd)return;
+  const c=document.getElementById('moCt');
+  c.innerHTML=`<h3>✏️ Sửa gửi tiết kiệm</h3><div class="fg"><label>Số tiền</label><input class="inp" id="ebAmt" value="${ff(bd.amount)}" style="text-align:right"></div><div class="fg"><label>Người gửi</label><select class="inp" id="ebOwn" style="text-align:left"><option value="Hạnh" ${bd.owner==='Hạnh'?'selected':''}>Hạnh</option><option value="Quân" ${bd.owner==='Quân'?'selected':''}>Quân</option></select></div><div class="fg"><label>Ngày gửi</label><input class="inp" id="ebDate" type="date" value="${bd.date||''}"></div><div class="fg"><label>Kỳ hạn</label><input class="inp" id="ebTerm" value="${bd.term||''}" style="text-align:right"></div><div class="fg"><label>Lãi suất</label><input class="inp" id="ebRate" value="${bd.rate||''}" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upBankDep(${id})">Lưu</button></div>`;
+  document.getElementById('moOv').classList.add('show');
+}
+function upBankDep(id){const bd=D.bankDeposits.find(b=>b.id===id);if(!bd)return;bd.amount=parseInt(document.getElementById('ebAmt').value.replace(/[,.]/g,''))||0;bd.owner=document.getElementById('ebOwn').value;bd.date=document.getElementById('ebDate').value;bd.term=parseFloat(document.getElementById('ebTerm').value)||0;bd.rate=parseFloat(document.getElementById('ebRate').value)||0;save();closeM();render()}
+function delBankDep(id){if(!confirm('Xóa giao dịch này?'))return;D.bankDeposits=D.bankDeposits.filter(b=>b.id!==id);save();render()}
+
+function saveMonth(){
+  save();toast(`✅ Đã lưu`);render();
+}
+function editMonthTarget(key){
+  const parts=key.split('-');const y=parts[0];const m=parseInt(parts[1])+1;
+  const sp=savSplitY(Math.max(0,y-C.SY));
+  const custom=D.monthTargets[key];
+  const bk=custom?custom.bank:sp.bank;
+  const gd=custom?custom.gold:sp.gold;
+  const c=document.getElementById('moCt');
+  c.innerHTML=`<h3>🎯 Mục tiêu T${m}/${y}</h3><div class="fg"><label>🏦 Gửi tiết kiệm</label><input class="inp" id="emtBank" value="${ff(bk)}" style="text-align:right"></div><div class="fg"><label>🥇 Mua vàng</label><input class="inp" id="emtGold" value="${ff(gd)}" style="text-align:right"></div><div class="sb" style="margin:8px 0;color:var(--dim);font-size:.75rem">Mặc định: 🏦 ${f(sp.bank)} + 🥇 ${f(sp.gold)} — Để cả hai bằng 0 để reset</div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="saveMonthTarget('${key}')">Lưu</button></div>`;
+  document.getElementById('moOv').classList.add('show');
+}
+function saveMonthTarget(key){
+  const bk=parseInt(document.getElementById('emtBank').value.replace(/[,.]/g,''))||0;
+  const gd=parseInt(document.getElementById('emtGold').value.replace(/[,.]/g,''))||0;
+  if(bk>0||gd>0){D.monthTargets[key]={bank:bk,gold:gd}}else{delete D.monthTargets[key]}
+  save();closeM();render();toast('✅ Đã cập nhật target');
+}
+function editDashTarget(){
+  const c=document.getElementById('moCt');
+  c.innerHTML=`<h3>🎯 Mục tiêu tổng tài sản</h3><div class="fg"><label>Mục tiêu (VNĐ)</label><input class="inp" id="edtAmt" value="${ff(D.dashTarget)}" style="text-align:right"></div><div class="sb" style="margin:8px 0;color:var(--dim);font-size:.75rem">VD: 500,000,000 = 500 triệu | 1,000,000,000 = 1 tỷ</div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="saveDashTarget()">Lưu</button></div>`;
+  document.getElementById('moOv').classList.add('show');
+}
+function saveDashTarget(){
+  const v=parseInt(document.getElementById('edtAmt').value.replace(/[,.]/g,''))||1e9;
+  D.dashTarget=v;save();closeM();render();toast('✅ Mục tiêu: '+f(v));
+}
+
+function rOverview(){
+  const pp=document.getElementById('ovYPills');if(!pp)return;pp.innerHTML='';
+  for(let i=0;i<C.YR;i++){const y=C.SY+i;pp.innerHTML+=`<button class="pill ${y===cYear?'on':''}" onclick="cYear=${y};render()">${y} (${C.SA+i}t)</button>`}
+  const now=new Date(),yi=cYear-C.SY,sp=savSplitY(Math.max(0,yi));
+  let yTarget=0,yHanh=0,yQuan=0,y610=0,y9999=0,yCurVal=0,yBkT=0,yGdT=0;
+  const tb=document.getElementById('ovTb');tb.innerHTML='';
+  const mTargetDef=sp.bank+sp.gold; // combined
+  for(let i=0;i<12;i++){
+    const mtKey=`${cYear}-${i}`;
+    const custom=D.monthTargets[mtKey];
+    const mTarget=custom?(custom.bank+custom.gold):mTargetDef;
+    const past=cYear<now.getFullYear()||(cYear===now.getFullYear()&&i<now.getMonth());
+    const cur=cYear===now.getFullYear()&&i===now.getMonth();
+    // Bank deposits for this month by owner
+    const mBd=D.bankDeposits.filter(bd=>{const dt=new Date(bd.date);return dt.getFullYear()===cYear&&dt.getMonth()===i});
+    const mHanh=mBd.filter(b=>b.owner==='Hạnh').reduce((s,b)=>s+b.amount,0);
+    const mQuan=mBd.filter(b=>b.owner==='Quân').reduce((s,b)=>s+b.amount,0);
+    const mGd=D.goldHoldings.filter(g=>{const dt=new Date(g.date);return dt.getFullYear()===cYear&&dt.getMonth()===i});
+    const m610=mGd.filter(g=>g.type==='610').reduce((s,g)=>s+g.chi,0);
+    const m9999=mGd.filter(g=>g.type==='9999').reduce((s,g)=>s+g.chi,0);
+    const mGoldVal=m610*D.goldPrices.g610+m9999*D.goldPrices.g9999;
+    let mCurVal=0;mBd.forEach(bd=>{const ci=calcInterest(bd.amount,bd.date,bd.term,bd.rate);mCurVal+=ci.current});
+    const mBankAmt=mHanh+mQuan;
+    const intEarned=mCurVal-mBankAmt;
+    const curVal=mBankAmt?f(mCurVal)+(intEarned>0?' <span style="color:var(--green);font-size:.7rem">(+'+f(intEarned)+')</span>':''):'—';
+    const hasData=mBankAmt>0||m610>0||m9999>0;
+    const mSaved=mBankAmt+mGoldVal;
+    let tg='<span class="tag p">—</span>';
+    if(cur)tg='<span class="tag n">● Now</span>';
+    else if(past&&hasData){tg=mSaved>=mTarget?'<span class="tag d">✓ Đạt</span>':'<span class="tag" style="background:rgba(255,71,87,.15);color:var(--red)">✗ Thiếu</span>'}
+    const mBkT=custom?custom.bank:sp.bank;const mGdT=custom?custom.gold:sp.gold;
+    yTarget+=mTarget;yHanh+=mHanh;yQuan+=mQuan;y610+=m610;y9999+=m9999;yCurVal+=mCurVal;yBkT+=mBkT;yGdT+=mGdT;
+    tb.innerHTML+=`<tr style="${cur?'background:rgba(108,99,255,.08)':''}">
+      <td><strong>T${i+1}/${cYear}</strong></td>
+      <td class="r" style="color:var(--ac)">${ff(mTarget)}${D.monthTargets[mtKey]?'<span style="color:var(--gold);font-size:.6rem"> ★</span>':''}</td>
+      <td class="r" style="color:var(--pink)">${mHanh?ff(mHanh):'<span style="color:var(--dim)">—</span>'}</td>
+      <td class="r" style="color:#5bc0de">${mQuan?ff(mQuan):'<span style="color:var(--dim)">—</span>'}</td>
+      <td class="r" style="color:var(--gold)">${m610||'<span style="color:var(--dim)">—</span>'}</td>
+      <td class="r" style="color:var(--gold2)">${m9999||'<span style="color:var(--dim)">—</span>'}</td>
+      <td class="r" style="color:var(--gold);font-size:.78rem">${mGoldVal?f(mGoldVal):'<span style="color:var(--dim)">—</span>'}</td>
+      <td class="r" style="font-size:.78rem">${curVal}</td>
+      <td>${tg}</td></tr>`;
+  }
+  const yGoldValT=y610*D.goldPrices.g610+y9999*D.goldPrices.g9999;
+  tb.innerHTML+=`<tr class="tr">
+    <td><strong>TỔNG</strong></td>
+    <td class="r" style="color:var(--ac)">${ff(yTarget)}</td>
+    <td class="r" style="font-weight:700;color:var(--pink)">${ff(yHanh)}</td>
+    <td class="r" style="font-weight:700;color:#5bc0de">${ff(yQuan)}</td>
+    <td class="r" style="font-weight:700;color:var(--gold)">${y610.toFixed(1)}</td>
+    <td class="r" style="font-weight:700;color:var(--gold2)">${y9999.toFixed(1)}</td>
+    <td class="r" style="font-weight:700;color:var(--gold)">${f(yGoldValT)}</td>
+    <td class="r" style="font-weight:700;color:var(--green)">${f(yCurVal)}</td>
+    <td></td></tr>`;
+  const yGoldVal=D.goldHoldings.filter(g=>{const dt=new Date(g.date);return dt.getFullYear()===cYear}).reduce((s,g)=>{const p=g.type==='610'?D.goldPrices.g610:D.goldPrices.g9999;return s+g.chi*p},0);
+  const yBankAct=yHanh+yQuan;
+  const yTotal=yBankAct+yGoldVal;
+  const pct=yTarget?((yTotal/yTarget)*100).toFixed(1):'0';
+  const gap=yTarget-yTotal;
+  document.getElementById('ovSummary').innerHTML=`
+    <div class="cd"><div class="lb">🎯 Mục tiêu năm</div><div class="vl" style="color:var(--ac)">${f(yTarget)}</div><div class="sb">🏦 ${f(yBkT)} + 🥇 ${f(yGdT)}</div></div>
+    <div class="cd"><div class="lb">✅ Đã tiết kiệm</div><div class="vl" style="color:var(--green)">${f(yTotal)}</div><div class="sb">🏦 ${f(yBankAct)} + 🥇 ${f(yGoldVal)}</div></div>
+    <div class="cd"><div class="lb">📏 Còn cách target</div><div class="vl" style="color:${gap>0?'var(--red)':'var(--green)'}">${gap>0?f(gap):'🎉 Vượt '+f(-gap)}</div><div class="sb">${pct}% hoàn thành</div></div>
+    <div class="cd"><div class="lb">🥇 Vàng đã mua</div><div class="vl" style="color:var(--gold)">${(y610+y9999).toFixed(1)} chỉ</div><div class="sb">610: ${y610.toFixed(1)} | 9999: ${y9999.toFixed(1)}</div></div>`;
+}
+
+let selMs=0;
+function rForecast(){
+  const fc=forecast(),ast=tAst();
+  const colors=['var(--ac2)','var(--ac)','var(--gold)','var(--green)'];
+  const sorted=fc.milestones.map((ms,i)=>({...ms,idx:i,pct:Math.min((ast/ms.target)*100,100)})).sort((a,b)=>a.pct-b.pct);
+  document.getElementById('fMilestones').innerHTML=`<div class="g4">${sorted.map(ms=>{
+    const reached=ast>=ms.target;const active=ms.idx===selMs;
+    return `<div class="cd" style="border-left:3px solid ${colors[ms.idx]};cursor:pointer;${active?'box-shadow:0 0 0 2px '+colors[ms.idx]+';':''}opacity:${active?1:0.7}" onclick="selMs=${ms.idx};rForecast()">
+      <div class="lb">${ms.icon} ${ms.label}</div>
+      <div class="vl" style="color:${colors[ms.idx]};font-size:1rem">${ms.found?ms.found.age+' tuổi — T'+ms.found.month+'/'+ms.found.year:'<span style="color:var(--dim)">>'+String(C.SA+C.YR)+'t</span>'}</div>
+      <div class="pb" style="margin-top:6px"><div class="pbg" style="height:4px"><div class="pf" style="width:${ms.pct}%;background:${colors[ms.idx]}"></div></div></div>
+      <div class="sb">${reached?'🎉 Đã đạt!':ms.pct.toFixed(1)+'% • Còn '+f(ms.target-ast)}</div>
+    </div>`}).join('')}</div>`;
+  const ms=fc.milestones[selMs];const color=colors[selMs];
+  const pctM=Math.min((ast/ms.target)*100,100);
+  document.getElementById('fDetail').innerHTML=`
+    <div class="tg">${ms.icon} ${ms.label}</div>
+    <div class="bn" style="color:${color}">${ms.found?'Đạt '+ms.label+' vào '+ms.found.age+' tuổi — T'+ms.found.month+'/'+ms.found.year:'Chưa đủ dữ liệu (>'+String(C.SA+C.YR)+' năm)'}</div>
+    <div class="pb"><div class="pbg"><div class="pf" style="width:${pctM}%;background:${color}"></div></div><div class="pl"><span>${f(ast)} (${pctM.toFixed(1)}%)</span><span>Mục tiêu: ${ms.label}</span></div></div>
+    <div class="inf"><div><div class="il">Còn thiếu</div><div class="iv" style="color:${color}">${f(Math.max(0,ms.target-ast))}</div></div><div><div class="il">Tiết kiệm/tháng</div><div class="iv" style="color:var(--green)">${f(tSav())}</div></div><div><div class="il">Tăng/năm</div><div class="iv">${D.cfg.annualInc}%</div></div></div>`;
+  const yd=fc.yd,show=yd.filter((_,i)=>i%2===0||i===yd.length-1);
+  const mB=yd[yd.length-1]?.bank||1,mG=yd[yd.length-1]?.gold||1,mT=yd[yd.length-1]?.total||1;
+  const bars=(d,k,bc,ac,cl,mx)=>d.map(r=>`<div class="pr"><span class="pa ${ac}">${r.age}t</span><div class="pw"><div class="pp ${bc}" style="width:${(r[k]/mx*100)}%"><span class="ppl">${f(r[k])}</span></div></div><span class="pm" style="color:${cl}">${f(r[k])}</span></div>`).join('');
+  document.getElementById('pBank').innerHTML=bars(show,'bank','','','var(--ac)',mB);
+  document.getElementById('pGold').innerHTML=bars(show,'gold','gb','pg','var(--gold)',mG);
+  document.getElementById('pTotal').innerHTML=bars(show,'total','tb2','pt','var(--green)',mT);
+}
+
+// MODALS
+function openM(t){
+  const c=document.getElementById('moCt');
+  if(t==='inc')c.innerHTML=`<h3>💵 Thêm thu nhập</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Lương chính"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" placeholder="17,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addInc()">Thêm</button></div>`;
+  else if(t==='exp')c.innerHTML=`<h3>📤 Thêm chi phí</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Tiền nhà"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" placeholder="3,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addExp()">Thêm</button></div>`;
+  else if(t==='ast'){const isBank=`<div class="fg" id="bankFields" style="display:none"><div class="fg"><label>Ngày gửi</label><input class="inp" id="mdd" type="date" style="text-align:left"></div><div class="fg"><label>Kỳ hạn (tháng)</label><input class="inp" id="mtrm" placeholder="6" style="text-align:right"></div><div class="fg"><label>Lãi suất (%/năm)</label><input class="inp" id="mrt" placeholder="6" style="text-align:right"></div></div>`;c.innerHTML=`<h3>💎 Thêm tài sản</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Sổ TK MB"></div><div class="fg"><label>Loại</label><select class="inp" id="mt" style="text-align:left" onchange="document.getElementById('bankFields').style.display=this.value==='bank'?'block':'none'"><option value="cash">💵 Tiền mặt</option><option value="bank">🏦 Ngân hàng</option><option value="other">📦 Khác</option></select></div>${isBank}<div class="fg"><label>Ghi chú</label><input class="inp" id="mnt" placeholder="Ghi chú"></div><div class="fg"><label>Giá trị</label><input class="inp" id="ma" placeholder="50,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addAst()">Thêm</button></div>`;}
+  else if(t==='gold')c.innerHTML=`<h3>🥇 Thêm giao dịch vàng</h3><div class="fg"><label>Loại vàng</label><select class="inp" id="mgt" style="text-align:left"><option value="610">Vàng 610</option><option value="9999">Vàng 9999</option></select></div><div class="fg"><label>Số chỉ</label><input class="inp" id="mchi" placeholder="1" style="text-align:right"></div><div class="fg"><label>Giá mua/chỉ</label><input class="inp" id="mgp" placeholder="8,200,000" style="text-align:right" value="${ff(D.goldPrices.g610)}"></div><div class="fg"><label>Ngày mua</label><input class="inp" id="mgd" type="date" style="text-align:left"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addGold()">Thêm</button></div>`;
+  document.getElementById('moOv').classList.add('show');
+}
+function closeM(){document.getElementById('moOv').classList.remove('show')}
+document.getElementById('moOv').addEventListener('click',e=>{if(e.target===e.currentTarget)closeM()});
+
+function addInc(){const n=document.getElementById('mn').value.trim(),a=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;if(!n||!a)return;D.incomes.push({id:Date.now(),name:n,amount:a});save();closeM();render()}
+function addExp(){const n=document.getElementById('mn').value.trim(),a=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;if(!n||!a)return;D.expenses.push({id:Date.now(),name:n,amount:a});save();closeM();render()}
+function addAst(){const n=document.getElementById('mn').value.trim(),v=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;if(!n)return;const a={id:Date.now(),name:n,type:document.getElementById('mt').value,note:document.getElementById('mnt').value,value:v};if(a.type==='bank'){const dd=document.getElementById('mdd');if(dd&&dd.value)a.depositDate=dd.value;const trm=document.getElementById('mtrm');if(trm&&trm.value)a.term=parseInt(trm.value)||0;const rt=document.getElementById('mrt');if(rt&&rt.value)a.rate=parseFloat(rt.value)||0}D.assets.push(a);save();closeM();render()}
+function addGold(){const chi=parseFloat(document.getElementById('mchi').value.replace(/,/g,'.'))||0;if(!chi)return;const price=parseInt(document.getElementById('mgp').value.replace(/[,.]/g,''))||0;const type=document.getElementById('mgt').value;const date=document.getElementById('mgd').value||new Date().toISOString().slice(0,10);D.goldHoldings.push({id:Date.now(),type,chi,price,date});save();closeM();render()}
+function delGold(id){D.goldHoldings=D.goldHoldings.filter(g=>g.id!==id);save();render()}
+function editGold(id){const g=D.goldHoldings.find(x=>x.id===id);if(!g)return;const c=document.getElementById('moCt');c.innerHTML=`<h3>✏️ Sửa giao dịch vàng</h3><div class="fg"><label>Loại vàng</label><select class="inp" id="mgt" style="text-align:left"><option value="610" ${g.type==='610'?'selected':''}>Vàng 610</option><option value="9999" ${g.type==='9999'?'selected':''}>Vàng 9999</option></select></div><div class="fg"><label>Số chỉ</label><input class="inp" id="mchi" value="${g.chi}" style="text-align:right"></div><div class="fg"><label>Giá mua/chỉ</label><input class="inp" id="mgp" value="${ff(g.price)}" style="text-align:right"></div><div class="fg"><label>Ngày mua</label><input class="inp" id="mgd" type="date" value="${g.date||''}" style="text-align:left"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upGold(${id})">Lưu</button></div>`;document.getElementById('moOv').classList.add('show')}
+function upGold(id){const g=D.goldHoldings.find(x=>x.id===id);if(!g)return;g.type=document.getElementById('mgt').value;g.chi=parseFloat(document.getElementById('mchi').value.replace(/,/g,'.'))||0;g.price=parseInt(document.getElementById('mgp').value.replace(/[,.]/g,''))||0;g.date=document.getElementById('mgd').value;save();closeM();render()}
+
+function delInc(id){D.incomes=D.incomes.filter(i=>i.id!==id);save();render()}
+function delExp(id){D.expenses=D.expenses.filter(e=>e.id!==id);save();render()}
+function delAst(id){D.assets=D.assets.filter(a=>a.id!==id);save();render()}
+
+function editInc(id){const it=D.incomes.find(i=>i.id===id);if(!it)return;const c=document.getElementById('moCt');c.innerHTML=`<h3>✏️ Sửa thu nhập</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" value="${it.name}"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" value="${ff(it.amount)}" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upInc(${id})">Lưu</button></div>`;document.getElementById('moOv').classList.add('show')}
+function upInc(id){const it=D.incomes.find(i=>i.id===id);if(!it)return;it.name=document.getElementById('mn').value.trim();it.amount=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;save();closeM();render()}
+
+function editExp(id){const it=D.expenses.find(e=>e.id===id);if(!it)return;const c=document.getElementById('moCt');c.innerHTML=`<h3>✏️ Sửa chi phí</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" value="${it.name}"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" value="${ff(it.amount)}" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upExp(${id})">Lưu</button></div>`;document.getElementById('moOv').classList.add('show')}
+function upExp(id){const it=D.expenses.find(e=>e.id===id);if(!it)return;it.name=document.getElementById('mn').value.trim();it.amount=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;save();closeM();render()}
+
+function editAst(id){const it=D.assets.find(a=>a.id===id);if(!it)return;const c=document.getElementById('moCt');const bankExtra=it.type==='bank'?`<div class="fg"><label>Ngày gửi</label><input class="inp" id="mdd" type="date" value="${it.depositDate||''}" style="text-align:left"></div><div class="fg"><label>Kỳ hạn (tháng)</label><input class="inp" id="mtrm" value="${it.term||''}" style="text-align:right"></div><div class="fg"><label>Lãi suất (%/năm)</label><input class="inp" id="mrt" value="${it.rate||''}" style="text-align:right"></div>`:'';
+c.innerHTML=`<h3>✏️ Sửa tài sản</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" value="${it.name}"></div><div class="fg"><label>Loại</label><select class="inp" id="mt" style="text-align:left"><option value="cash" ${it.type==='cash'?'selected':''}>💵 Tiền mặt</option><option value="bank" ${it.type==='bank'?'selected':''}>🏦 Ngân hàng</option><option value="other" ${it.type==='other'?'selected':''}>📦 Khác</option></select></div>${bankExtra}<div class="fg"><label>Ghi chú</label><input class="inp" id="mnt" value="${it.note||''}"></div><div class="fg"><label>Giá trị</label><input class="inp" id="ma" value="${ff(it.value)}" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upAst(${id})">Lưu</button></div>`;document.getElementById('moOv').classList.add('show')}
+function upAst(id){const it=D.assets.find(a=>a.id===id);if(!it)return;it.name=document.getElementById('mn').value.trim();it.type=document.getElementById('mt').value;it.note=document.getElementById('mnt').value;it.value=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;const dd=document.getElementById('mdd');if(dd)it.depositDate=dd.value;const trm=document.getElementById('mtrm');if(trm)it.term=parseInt(trm.value)||0;const rt=document.getElementById('mrt');if(rt)it.rate=parseFloat(rt.value)||0;save();closeM();render()}
+
+function render(){rDash();rIncome();rAssets();rGold();rSav();rOverview();rForecast()}
+
+function exportData(){const d=JSON.stringify(D,null,2);const b=new Blob([d],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='savings_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('💾 Đã export!')}
+function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(!d.incomes||!d.expenses){toast('⚠️ File không hợp lệ!');return}D=d;save();render();toast('✅ Đã import thành công!')}catch{toast('⚠️ Lỗi đọc file!')}};r.readAsText(file);e.target.value=''}
+
+render();
+// Auto-fetch gold prices on load
+fetchGoldPrices();
+</script>
+</body>
+</html>
