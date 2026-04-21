@@ -93,6 +93,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="nav" data-p="assets"><span>💎</span> Tài sản hiện có</div>
 
 <div class="nav" data-p="savings"><span>🏦</span> Tiết kiệm & Vàng</div>
+<div class="nav" data-p="fund"><span>📈</span> Chứng Chỉ Quỹ</div>
 <div class="nav" data-p="overview"><span>📊</span> Overview</div>
 <div class="nav" data-p="forecast"><span>🚀</span> Forecast 1 tỷ</div>
 <div style="margin-top:auto;padding:16px 0;border-top:1px solid rgba(255,255,255,.06)">
@@ -107,7 +108,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="g4" id="dCards"></div>
 <div class="fb" id="fBanner"></div>
 <div class="sh"><h2 class="st">📂 Tiết Kiệm Theo Mục</h2></div>
-<div class="g3" id="sCats"></div>
+<div class="g4" id="sCats"></div>
 </div>
 
 <!-- INCOME & EXPENSES -->
@@ -172,6 +173,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 </div>
 
+<!-- FUND TRACKING -->
+<div class="page" id="p-fund">
+<div class="sh"><h1 class="st">📈 Chứng Chỉ Quỹ (ETF)</h1><button class="btn bp" onclick="openM('fund')">+ Thêm giao dịch</button></div>
+<div class="g3" id="fundSummary" style="margin-bottom:16px"></div>
+<div class="cd" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,214,143,.06),rgba(0,184,117,.06))">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong>💹 Giá NAV hiện tại (VNĐ/đơn vị)</strong></div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap">
+    <div><div class="lb">E1VFVN30</div><div style="display:flex;gap:8px;align-items:center"><input class="inp" style="width:150px;text-align:right" id="priceEtf30" oninput="updateFundPrice('etf30',this.value)" placeholder="0"><span style="font-size:.75rem;color:var(--dim)">VNĐ</span></div></div>
+    <div><div class="lb">FUEVFVND</div><div style="display:flex;gap:8px;align-items:center"><input class="inp" style="width:150px;text-align:right" id="priceEtfvfvnd" oninput="updateFundPrice('etfvfvnd',this.value)" placeholder="0"><span style="font-size:.75rem;color:var(--dim)">VNĐ</span></div></div>
+  </div>
+</div>
+<h3 style="margin-bottom:10px;font-size:.9rem">📋 Lịch sử giao dịch</h3>
+<table class="tb"><thead><tr><th>Ngày</th><th>Quỹ</th><th class="r">Số đơn vị</th><th class="r">Giá mua/đvị</th><th class="r">Tiền đầu tư</th><th class="r">Giá hiện tại</th><th class="r">Lãi/Lỗ</th><th class="r"></th></tr></thead><tbody id="fundHistTb"></tbody></table>
+</div>
+
 <!-- OVERVIEW -->
 <div class="page" id="p-overview">
 <div class="sh"><h1 class="st">📊 Overview Theo Năm</h1></div>
@@ -221,14 +237,16 @@ function def(){return{
   assets:[{id:1,name:'Tiền mặt',type:'cash',note:'TK ngân hàng',value:0},{id:2,name:'Sổ tiết kiệm Cake',type:'bank',note:'Lãi 6%/năm',value:0}],
   goldHoldings:[],
   bankDeposits:[],
+  fundHoldings:[],
   goldPrices:{g610:10486000,g9999:17050000},
+  fundPrices:{etf30:14500,etfvfvnd:12000},
   tracking:{},
   cfg:{bankRate:6,goldRate:10,annualInc:10,bankPct:72,goldPct:28},
   monthTargets:{'2026-2':{bank:72000000,gold:28000000}},
   dashTarget:1e9
 }}
 
-function load(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.incomes&&d.expenses){if(!d.goldHoldings)d.goldHoldings=[];if(!d.bankDeposits)d.bankDeposits=[];if(!d.goldPrices)d.goldPrices={g610:10486000,g9999:17050000};if(d.goldPrices.g610<=9600000)d.goldPrices.g610=10486000;if(d.goldPrices.g9999<=10800000)d.goldPrices.g9999=17050000;if(!d.monthTargets)d.monthTargets={};if(!d.monthTargets['2026-2'])d.monthTargets['2026-2']={bank:72000000,gold:28000000};if(typeof d.monthTargets['2026-2']==='number'){const v=d.monthTargets['2026-2'];d.monthTargets['2026-2']={bank:Math.round(v*0.72),gold:Math.round(v*0.28)}}if(!d.dashTarget)d.dashTarget=1e9;return d}}const old=localStorage.getItem('hanh_savings')||localStorage.getItem('hanh_finance_v2')||localStorage.getItem('hanh_finance_v3');const b=def();if(old){try{const o=JSON.parse(old);if(o.tracking)b.tracking=o.tracking;else if(typeof o==='object')b.tracking=o;}catch{}}return b}catch{return def()}}
+function load(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.incomes&&d.expenses){if(!d.goldHoldings)d.goldHoldings=[];if(!d.bankDeposits)d.bankDeposits=[];if(!d.goldPrices)d.goldPrices={g610:10486000,g9999:17050000};if(d.goldPrices.g610<=9600000)d.goldPrices.g610=10486000;if(d.goldPrices.g9999<=10800000)d.goldPrices.g9999=17050000;if(!d.monthTargets)d.monthTargets={};if(!d.monthTargets['2026-2'])d.monthTargets['2026-2']={bank:72000000,gold:28000000};if(typeof d.monthTargets['2026-2']==='number'){const v=d.monthTargets['2026-2'];d.monthTargets['2026-2']={bank:Math.round(v*0.72),gold:Math.round(v*0.28)}}if(!d.dashTarget)d.dashTarget=1e9;if(!d.fundHoldings)d.fundHoldings=[];if(!d.fundPrices)d.fundPrices={etf30:14500,etfvfvnd:12000};return d}}const old=localStorage.getItem('hanh_savings')||localStorage.getItem('hanh_finance_v2')||localStorage.getItem('hanh_finance_v3');const b=def();if(old){try{const o=JSON.parse(old);if(o.tracking)b.tracking=o.tracking;else if(typeof o==='object')b.tracking=o;}catch{}}return b}catch{return def()}}
 function save(){localStorage.setItem(SK,JSON.stringify(D));cloudSave()}
 let syncing=false,hasLocalData=false;
 const SHARE_CODE='021100';
@@ -287,7 +305,8 @@ function tInc(){return D.incomes.reduce((s,i)=>s+i.amount,0)}
 function tExp(){return D.expenses.reduce((s,e)=>s+e.amount,0)}
 function tSav(){return Math.max(0,tInc()-tExp())}
 function goldValue(){let t610=0,t9999=0;D.goldHoldings.forEach(g=>{if(g.type==='610')t610+=g.chi;else t9999+=g.chi});return{chi610:t610,chi9999:t9999,val610:t610*D.goldPrices.g610,val9999:t9999*D.goldPrices.g9999,total:t610*D.goldPrices.g610+t9999*D.goldPrices.g9999}}
-function tAst(){const trk=tTrk();return D.assets.reduce((s,a)=>s+a.value,0)+goldValue().total+trk.bank}
+function fundValue(){let te30=0,tvfvnd=0;(D.fundHoldings||[]).forEach(fh=>{if(fh.fund==='etf30')te30+=fh.units;else tvfvnd+=fh.units});const pe30=D.fundPrices?.etf30||14500,pvfvnd=D.fundPrices?.etfvfvnd||12000;return{unitsEtf30:te30,unitsEtfvfvnd:tvfvnd,valEtf30:te30*pe30,valEtfvfvnd:tvfvnd*pvfvnd,total:te30*pe30+tvfvnd*pvfvnd}}
+function tAst(){const trk=tTrk();return D.assets.reduce((s,a)=>s+a.value,0)+goldValue().total+trk.bank+fundValue().total}
 function tTrk(){let b=0,g=0,gc=0;b=D.bankDeposits.reduce((s,d)=>s+d.amount,0);Object.values(D.tracking).forEach(d=>{g+=(d.gold||0);gc+=(d.goldChi||0)});return{bank:b,gold:g,goldChi:gc,total:b+g}}
 
 // Savings split based on bankPct/goldPct of available savings
@@ -379,13 +398,14 @@ function rDash(){
   let wRate=0,wDep=0;Object.values(D.tracking).forEach(d=>{if(d.bank>0){wRate+=d.bank*(d.rate||D.cfg.bankRate);wDep+=d.bank}});
   const avgR=wDep>0?(wRate/wDep).toFixed(1):D.cfg.bankRate;
   const gv=goldValue();
+  const fv2=fundValue();let fCost=0;(D.fundHoldings||[]).forEach(fh=>fCost+=fh.units*fh.price);const fPnl=fv2.total-fCost;
   document.getElementById('sCats').innerHTML=`
     <div class="sc bk"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🏦 Gửi Tiết Kiệm</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(108,99,255,.15);color:var(--ac)">Lãi TB ${avgR}%/năm</span></div>
       <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">SỐ DƯ</div><div style="font-size:1.1rem;font-weight:700;color:var(--ac)">${f(totalBank)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GỬI/THÁNG</div><div style="font-size:1.1rem;font-weight:700">${f(sp.bank)}</div></div></div></div>
-    <div class="sc gd"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🥇 Vàng 610</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(245,166,35,.15);color:var(--gold)">${gv.chi610.toFixed(1)} chỉ</span></div>
-      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${f(gv.val610)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GIÁ/CHỈ</div><div style="font-size:1.1rem;font-weight:700">${f(D.goldPrices.g610)}</div></div></div></div>
-    <div class="sc gd"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🥇 Vàng 9999</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(232,148,26,.15);color:var(--gold2)">${gv.chi9999.toFixed(1)} chỉ</span></div>
-      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold2)">${f(gv.val9999)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">GIÁ/CHỈ</div><div style="font-size:1.1rem;font-weight:700">${f(D.goldPrices.g9999)}</div></div></div></div>`;
+    <div class="sc gd"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>🥇 Vàng (tổng)</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(245,166,35,.15);color:var(--gold)">${(gv.chi610+gv.chi9999).toFixed(1)} chỉ</span></div>
+      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${f(gv.total)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">MUA/THÁNG</div><div style="font-size:1.1rem;font-weight:700">${f(sp.gold)}</div></div></div></div>
+    <div class="sc" style="background:linear-gradient(135deg,rgba(0,214,143,.08),rgba(0,214,143,.02))"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><strong>📈 Chứng Chỉ Quỹ</strong><span style="font-size:.7rem;padding:4px 10px;border-radius:20px;background:rgba(0,214,143,.15);color:var(--green)">${fv2.unitsEtf30+fv2.unitsEtfvfvnd>0?(fv2.unitsEtf30+fv2.unitsEtfvfvnd).toLocaleString()+' đvị':'Chưa có'}</span></div>
+      <div class="g2" style="margin-bottom:0"><div><div style="font-size:.68rem;color:var(--dim)">GIÁ TRỊ</div><div style="font-size:1.1rem;font-weight:700;color:var(--green)">${f(fv2.total)}</div></div><div><div style="font-size:.68rem;color:var(--dim)">LÃI/LỖ</div><div style="font-size:1.1rem;font-weight:700;color:${fPnl>=0?'var(--green)':'var(--red)'}">${fPnl>=0?'+':''}${f(fPnl)}</div></div></div></div>`;
 }
 
 function rIncome(){
@@ -459,6 +479,26 @@ function rGold(){
   }).join('');
   rGoldStatus();
 }
+
+function rFund(){
+  const pe30=document.getElementById('priceEtf30');if(pe30)pe30.value=ff(D.fundPrices?.etf30||14500);
+  const pvfvnd=document.getElementById('priceEtfvfvnd');if(pvfvnd)pvfvnd.value=ff(D.fundPrices?.etfvfvnd||12000);
+  const fv=fundValue();let totalCost=0;(D.fundHoldings||[]).forEach(fh=>totalCost+=fh.units*fh.price);
+  const pnl=fv.total-totalCost;
+  document.getElementById('fundSummary').innerHTML=`
+    <div class="cd"><div class="lb">💰 Tổng đầu tư</div><div class="vl" style="color:var(--ac)">${f(totalCost)}</div><div class="sb">${(D.fundHoldings||[]).length} giao dịch</div></div>
+    <div class="cd"><div class="lb">📈 Giá trị hiện tại</div><div class="vl" style="color:var(--green)">${f(fv.total)}</div><div class="sb">E1: ${fv.unitsEtf30.toLocaleString()} + FUEV: ${fv.unitsEtfvfvnd.toLocaleString()} đvị</div></div>
+    <div class="cd"><div class="lb">💹 Lãi/Lỗ</div><div class="vl" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${f(pnl)}</div><div class="sb">${totalCost?((pnl/totalCost)*100).toFixed(1)+'%':'0%'}</div></div>`;
+  document.getElementById('fundHistTb').innerHTML=(D.fundHoldings||[]).map(fh=>{
+    const curP=fh.fund==='etf30'?(D.fundPrices?.etf30||14500):(D.fundPrices?.etfvfvnd||12000);
+    const cost=fh.units*fh.price;const market=fh.units*curP;const pl=market-cost;
+    const fn=fh.fund==='etf30'?'E1VFVN30':'FUEVFVND';
+    return `<tr><td>${fh.date||'—'}</td><td style="color:var(--green);font-weight:600">${fn}</td><td class="r">${fh.units.toLocaleString()}</td><td class="r">${ff(fh.price)}</td><td class="r">${ff(cost)}</td><td class="r" style="color:var(--green)">${ff(curP)}</td><td class="r" style="color:${pl>=0?'var(--green)':'var(--red)'}">${pl>=0?'+':''}${ff(pl)}</td><td class="r"><button class="btn bo" style="padding:3px 10px;font-size:.72rem" onclick="delFund(${fh.id})">🗑️</button></td></tr>`;
+  }).join('');
+}
+function updateFundPrice(type,val){const v=parseInt(val.replace(/[,.]/g,''))||0;if(!D.fundPrices)D.fundPrices={};D.fundPrices[type]=v;save();render()}
+function delFund(id){if(!confirm('Xóa giao dịch này?'))return;D.fundHoldings=(D.fundHoldings||[]).filter(fh=>fh.id!==id);save();render()}
+function addFundTx(){const fund=document.getElementById('mfu').value;const units=parseInt(document.getElementById('mfunits').value.replace(/[,.]/g,''))||0;const price=parseInt(document.getElementById('mfprice').value.replace(/[,.]/g,''))||0;const date=document.getElementById('mfdate').value||new Date().toISOString().slice(0,10);if(!units||!price){toast('⚠️ Nhập số đơn vị và giá mua');return}if(!D.fundHoldings)D.fundHoldings=[];D.fundHoldings.push({id:Date.now(),fund,units,price,date});save();closeM();toast('✅ Đã thêm '+units.toLocaleString()+' đvị '+fund);render()}
 
 function calcInterest(principal,depositDate,termMonths,ratePercent){
   if(!principal||!depositDate)return{current:principal,interest:0,maturity:null};
@@ -751,6 +791,7 @@ function openM(t){
   if(t==='inc')c.innerHTML=`<h3>💵 Thêm thu nhập</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Lương chính"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" placeholder="17,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addInc()">Thêm</button></div>`;
   else if(t==='exp')c.innerHTML=`<h3>📤 Thêm chi phí</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Tiền nhà"></div><div class="fg"><label>Số tiền/tháng</label><input class="inp" id="ma" placeholder="3,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addExp()">Thêm</button></div>`;
   else if(t==='ast'){const isBank=`<div class="fg" id="bankFields" style="display:none"><div class="fg"><label>Ngày gửi</label><input class="inp" id="mdd" type="date" style="text-align:left"></div><div class="fg"><label>Kỳ hạn (tháng)</label><input class="inp" id="mtrm" placeholder="6" style="text-align:right"></div><div class="fg"><label>Lãi suất (%/năm)</label><input class="inp" id="mrt" placeholder="6" style="text-align:right"></div></div>`;c.innerHTML=`<h3>💎 Thêm tài sản</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" placeholder="VD: Sổ TK MB"></div><div class="fg"><label>Loại</label><select class="inp" id="mt" style="text-align:left" onchange="document.getElementById('bankFields').style.display=this.value==='bank'?'block':'none'"><option value="cash">💵 Tiền mặt</option><option value="bank">🏦 Ngân hàng</option><option value="other">📦 Khác</option></select></div>${isBank}<div class="fg"><label>Ghi chú</label><input class="inp" id="mnt" placeholder="Ghi chú"></div><div class="fg"><label>Giá trị</label><input class="inp" id="ma" placeholder="50,000,000" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addAst()">Thêm</button></div>`;}
+  else if(t==='fund')c.innerHTML=`<h3>📈 Thêm giao dịch quỹ</h3><div class="fg"><label>Quỹ</label><select class="inp" id="mfu" style="text-align:left"><option value="etf30">E1VFVN30</option><option value="etfvfvnd">FUEVFVND</option></select></div><div class="fg"><label>Số đơn vị mua</label><input class="inp" id="mfunits" placeholder="1000" style="text-align:right"></div><div class="fg"><label>Giá mua/đơn vị (VNĐ)</label><input class="inp" id="mfprice" placeholder="${ff(D.fundPrices?.etf30||14500)}" style="text-align:right"></div><div class="fg"><label>Ngày mua</label><input class="inp" id="mfdate" type="date" value="${new Date().toISOString().slice(0,10)}" style="text-align:left"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addFundTx()">Thêm</button></div>`;
   else if(t==='gold')c.innerHTML=`<h3>🥇 Thêm giao dịch vàng</h3><div class="fg"><label>Loại vàng</label><select class="inp" id="mgt" style="text-align:left"><option value="610">Vàng 610</option><option value="9999">Vàng 9999</option></select></div><div class="fg"><label>Số chỉ</label><input class="inp" id="mchi" placeholder="1" style="text-align:right"></div><div class="fg"><label>Giá mua/chỉ</label><input class="inp" id="mgp" placeholder="8,200,000" style="text-align:right" value="${ff(D.goldPrices.g610)}"></div><div class="fg"><label>Ngày mua</label><input class="inp" id="mgd" type="date" style="text-align:left"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="addGold()">Thêm</button></div>`;
   document.getElementById('moOv').classList.add('show');
 }
@@ -779,7 +820,7 @@ function editAst(id){const it=D.assets.find(a=>a.id===id);if(!it)return;const c=
 c.innerHTML=`<h3>✏️ Sửa tài sản</h3><div class="fg"><label>Tên</label><input class="inp" id="mn" value="${it.name}"></div><div class="fg"><label>Loại</label><select class="inp" id="mt" style="text-align:left"><option value="cash" ${it.type==='cash'?'selected':''}>💵 Tiền mặt</option><option value="bank" ${it.type==='bank'?'selected':''}>🏦 Ngân hàng</option><option value="other" ${it.type==='other'?'selected':''}>📦 Khác</option></select></div>${bankExtra}<div class="fg"><label>Ghi chú</label><input class="inp" id="mnt" value="${it.note||''}"></div><div class="fg"><label>Giá trị</label><input class="inp" id="ma" value="${ff(it.value)}" style="text-align:right"></div><div class="bg"><button class="btn bo" onclick="closeM()">Hủy</button><button class="btn bp" onclick="upAst(${id})">Lưu</button></div>`;document.getElementById('moOv').classList.add('show')}
 function upAst(id){const it=D.assets.find(a=>a.id===id);if(!it)return;it.name=document.getElementById('mn').value.trim();it.type=document.getElementById('mt').value;it.note=document.getElementById('mnt').value;it.value=parseInt(document.getElementById('ma').value.replace(/[,.]/g,''))||0;const dd=document.getElementById('mdd');if(dd)it.depositDate=dd.value;const trm=document.getElementById('mtrm');if(trm)it.term=parseInt(trm.value)||0;const rt=document.getElementById('mrt');if(rt)it.rate=parseFloat(rt.value)||0;save();closeM();render()}
 
-function render(){rDash();rIncome();rAssets();rGold();rSav();rOverview();rForecast()}
+function render(){rDash();rIncome();rAssets();rGold();rSav();rFund();rOverview();rForecast()}
 
 function exportData(){const d=JSON.stringify(D,null,2);const b=new Blob([d],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='savings_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('💾 Đã export!')}
 function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(!d.incomes||!d.expenses){toast('⚠️ File không hợp lệ!');return}D=d;save();render();toast('✅ Đã import thành công!')}catch{toast('⚠️ Lỗi đọc file!')}};r.readAsText(file);e.target.value=''}
@@ -798,6 +839,7 @@ document.addEventListener('click',e=>{const mn=e.target.closest('.mob-nav div[da
 <div data-p="income"><span>💵</span>Thu chi</div>
 <div data-p="assets"><span>💎</span>Tài sản</div>
 <div data-p="savings"><span>🏦</span>TK&Vàng</div>
+<div data-p="fund"><span>📈</span>Quỹ</div>
 <div data-p="forecast"><span>🚀</span>Forecast</div>
 <div id="mobLogin" onclick="fbLogin()"><span>🔑</span>Login</div>
 <div id="mobSync" onclick="forceSync()"><span>⬇️</span>Tải về</div>
